@@ -1,0 +1,19 @@
+[{ 
+    "avatar": "https://mfrank2016.github.io/breeze-blog/medias/avatar.jpg", 
+    "name": "捕风的legend", 
+    "introduction": "技术博主，文章还不错", 
+    "url": "https://realzhangqingwei.github.io/legend-blog/", 
+    "title": "前去学习" 
+}, { 
+    "avatar": "https://mfrank2016.github.io/breeze-blog/medias/cover.jpg", 
+    "name": "真没什么逻辑", 
+    "introduction": "面向信仰编程", 
+    "url": "https://draveness.me/", 
+    "title": "前去学习" 
+}, { 
+        "avatar": "https://draveness.me/images/draven-logo.png", 
+        "name": "阳明的博客", 
+        "introduction": "云原生", 
+        "url": "https://www.qikqiak.com/", 
+        "title": "前去学习" 
+}]
