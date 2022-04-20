@@ -75,33 +75,6 @@
   </entry>
   
   <entry>
-    <title>Vscode两步搭建图床</title>
-    <link href="https://realzhangqingwei.github.io/2022/04/17/2022-04-17-VS%20Code%E4%B8%A4%E6%AD%A5%E6%90%AD%E5%BB%BAgithub%E5%9B%BE%E5%BA%8A/"/>
-    <id>https://realzhangqingwei.github.io/2022/04/17/2022-04-17-VS%20Code%E4%B8%A4%E6%AD%A5%E6%90%AD%E5%BB%BAgithub%E5%9B%BE%E5%BA%8A/</id>
-    <published>2022-04-16T16:00:00.000Z</published>
-    <updated>2022-04-16T16:00:00.000Z</updated>
-    
-    <content type="html"><![CDATA[<blockquote><p><a href="">https://mp.weixin.qq.com/s/2HnFrcwxHr5g2VvRB2N_JQ</a></p></blockquote><h2 id="一、最终效果"><a href="#一、最终效果" class="headerlink" title="一、最终效果"></a>一、最终效果</h2><p>VS Code中，可以 <strong>实现图片的一键上传和引用返回</strong> 。免费图床，简单好用～</p><h2 id="二、写在前面"><a href="#二、写在前面" class="headerlink" title="二、写在前面"></a>二、写在前面</h2><p>之前用的某个图床( <strong>就不说名字了</strong> )，今天支持明天不支持，写的博客直接废了，让博主痛不欲生。</p><p>有的网站，强制给本地上传的图片加水印，丑死了。</p><p>痛定思痛决定搭建个github的图床，没想到这么简单就搞定了～</p><h3 id="1-VScode插件PicGo"><a href="#1-VScode插件PicGo" class="headerlink" title="1. VScode插件PicGo"></a>1. VScode插件PicGo</h3><p>需要用到Picgo这个插件，直接在vscode中搜索安装就行。</p><h3 id="2-PicGo的Github配置"><a href="#2-PicGo的Github配置" class="headerlink" title="2. PicGo的Github配置"></a>2. PicGo的Github配置</h3><p>打开设置，找到extensions中的Picgo的设置</p><p><img src="https://mmbiz.qpic.cn/mmbiz_png/KxvDktg1OnYrV4ia3Uxo26AwBCbL6tFmlKC9PIGWnyGFpV18LGJNtewA2nRWCn323sGIpXNzyTVlt216rIqU87Q/640?wx_fmt=png&amp;wxfrom=5&amp;wx_lazy=1&amp;wx_co=1" alt="图片"></p><p>往下拖找到github，进行配置:</p><p><img src="https://mmbiz.qpic.cn/mmbiz_png/KxvDktg1OnYrV4ia3Uxo26AwBCbL6tFmlnzohrdyQge2ibaJFKWfLBeEzRtlnv5s6wYbjB8TxorASEMe2MobBxgw/640?wx_fmt=png&amp;wxfrom=5&amp;wx_lazy=1&amp;wx_co=1" alt="图片"></p><p>首先是PicGo-Core设为</p><pre class="line-numbers language-none"><code class="language-none">github<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><p>Branch自己用git命令</p><pre class="line-numbers language-none"><code class="language-none">`git branch -a`<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><p>查看自己的branch，我就一个master，所以填的master</p><p>Path要和Repo搭配使用，到时候上传的图片就会到<strong>Repo+Path</strong>目录下，比如我的会传到：</p><pre class="line-numbers language-none"><code class="language-none">`wyl6/wyl6.github.io/imgs_for_blogs/`<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><p>下面，所以并不需要单独开个repo，加个目录就行。</p><p>注意，Path后面加”/“，不然后面一部分会当成图片名称合并进去。比如Path设为：</p><pre class="line-numbers language-none"><code class="language-none">`imgs_for_blogs/hello`<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><p>那么上传world.png时图片会成为：</p><pre class="line-numbers language-none"><code class="language-none">`imgs_for_blogs/helloworld.png`<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><p>最后一步的token，从github上重新生成一个就行(token只出现一次，之前的几乎找不到)。首先从头像那打开设置:</p><p><img src="https://mmbiz.qpic.cn/mmbiz_png/KxvDktg1OnYrV4ia3Uxo26AwBCbL6tFml7T3sVWS3rL22SvWgTe1Qab9FnUhg71yEhYWx0GaKRzBR4wuuSL3W1g/640?wx_fmt=png&amp;wxfrom=5&amp;wx_lazy=1&amp;wx_co=1" alt="图片"></p><p>找到最下面的Developer Settings:</p><p><img src="https://mmbiz.qpic.cn/mmbiz_png/KxvDktg1OnYrV4ia3Uxo26AwBCbL6tFmlBKkSuKqZDdoY9SVlePM1eUpy8DQYepTUnwkUuBibRMLIGhxDzY9gsNA/640?wx_fmt=png&amp;wxfrom=5&amp;wx_lazy=1&amp;wx_co=1" alt="图片"></p><p>从Personal Access里生成一个token，可以备份下次使用：<img src="https://mmbiz.qpic.cn/mmbiz_png/KxvDktg1OnYrV4ia3Uxo26AwBCbL6tFmlGoOAd8LfCZdux42AjYZSNVfydKcTBOP5U7qWKqomT1xYZRHUju5Uxg/640?wx_fmt=png&amp;wxfrom=5&amp;wx_lazy=1&amp;wx_co=1" alt="图片"></p><p>最后把token复制到PicGo设置里的Github Token里就行。然后就可以在vscode里使用图床了。</p><p>备注: 另外一种配置方法如下<br><img src="https://github.com/realzhangqingwei/legend-blog/source/_posts/This-is-a-test-blog/20220418211232.png" alt="20220418211232"></p><h3 id="3-图床命令"><a href="#3-图床命令" class="headerlink" title="3.图床命令"></a>3.图床命令</h3><p>三个简要命令：</p><h4 id="1-、-ctrl-alt-e"><a href="#1-、-ctrl-alt-e" class="headerlink" title="(1)、 ctrl+alt+e"></a>(1)、 <code>ctrl+alt+e</code></h4><p>从文件目录手动插入图片</p><h4 id="2-、ctrl-alt-u"><a href="#2-、ctrl-alt-u" class="headerlink" title="(2)、ctrl+alt+u"></a>(2)、<code>ctrl+alt+u</code></h4><p>从剪贴板插入图片</p><h4 id="3-、ctrl-alt-o"><a href="#3-、ctrl-alt-o" class="headerlink" title="(3)、ctrl+alt+o"></a>(3)、<code>ctrl+alt+o</code></h4><p>从输入目录插入图片，相对目录和绝对目录都行</p><h4 id="4-、-常用快捷键如下"><a href="#4-、-常用快捷键如下" class="headerlink" title="(4)、 常用快捷键如下"></a>(4)、 常用快捷键如下</h4><blockquote><p>从命令看，说一键不太准确，也就两三键吧。<br><img src="https://raw.githubusercontent.com/realzhangqingwei/realzhangqingwei.github.io/master/imgs_for_blogs/20220417103853.png" alt="20220417103853"></p></blockquote><h3 id="四、-参考链接"><a href="#四、-参考链接" class="headerlink" title="四、  参考链接"></a>四、  参考链接</h3><p><a href=""></a><a href="">https://mp.weixin.qq.com/s/2HnFrcwxHr5g2VvRB2N_JQ</a></p>]]></content>
-    
-    
-      
-      
-    <summary type="html">&lt;blockquote&gt;
-&lt;p&gt;&lt;a href=&quot;&quot;&gt;https://mp.weixin.qq.com/s/2HnFrcwxHr5g2VvRB2N_JQ&lt;/a&gt;&lt;/p&gt;
-&lt;/blockquote&gt;
-&lt;h2 id=&quot;一、最终效果&quot;&gt;&lt;a href=&quot;#一、最终效果&quot; class=&quot;</summary>
-      
-    
-    
-    
-    
-    <category term="Vscode" scheme="https://realzhangqingwei.github.io/tags/Vscode/"/>
-    
-    <category term="扩展" scheme="https://realzhangqingwei.github.io/tags/%E6%89%A9%E5%B1%95/"/>
-    
-  </entry>
-  
-  <entry>
     <title>Python和Go语言实现防火墙封堵IP</title>
     <link href="https://realzhangqingwei.github.io/2022/04/17/2022-04-17-Python%E5%92%8CGo%E8%AF%AD%E8%A8%80%E5%AE%9E%E7%8E%B0%E9%98%B2%E7%81%AB%E5%A2%99%E5%B0%81%E5%A0%B5IP/"/>
     <id>https://realzhangqingwei.github.io/2022/04/17/2022-04-17-Python%E5%92%8CGo%E8%AF%AD%E8%A8%80%E5%AE%9E%E7%8E%B0%E9%98%B2%E7%81%AB%E5%A2%99%E5%B0%81%E5%A0%B5IP/</id>
@@ -131,6 +104,33 @@
     <category term="防火墙" scheme="https://realzhangqingwei.github.io/tags/%E9%98%B2%E7%81%AB%E5%A2%99/"/>
     
     <category term="Ensp" scheme="https://realzhangqingwei.github.io/tags/Ensp/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Vscode两步搭建图床</title>
+    <link href="https://realzhangqingwei.github.io/2022/04/17/2022-04-17-VS%20Code%E4%B8%A4%E6%AD%A5%E6%90%AD%E5%BB%BAgithub%E5%9B%BE%E5%BA%8A/"/>
+    <id>https://realzhangqingwei.github.io/2022/04/17/2022-04-17-VS%20Code%E4%B8%A4%E6%AD%A5%E6%90%AD%E5%BB%BAgithub%E5%9B%BE%E5%BA%8A/</id>
+    <published>2022-04-16T16:00:00.000Z</published>
+    <updated>2022-04-16T16:00:00.000Z</updated>
+    
+    <content type="html"><![CDATA[<blockquote><p><a href="">https://mp.weixin.qq.com/s/2HnFrcwxHr5g2VvRB2N_JQ</a></p></blockquote><h2 id="一、最终效果"><a href="#一、最终效果" class="headerlink" title="一、最终效果"></a>一、最终效果</h2><p>VS Code中，可以 <strong>实现图片的一键上传和引用返回</strong> 。免费图床，简单好用～</p><h2 id="二、写在前面"><a href="#二、写在前面" class="headerlink" title="二、写在前面"></a>二、写在前面</h2><p>之前用的某个图床( <strong>就不说名字了</strong> )，今天支持明天不支持，写的博客直接废了，让博主痛不欲生。</p><p>有的网站，强制给本地上传的图片加水印，丑死了。</p><p>痛定思痛决定搭建个github的图床，没想到这么简单就搞定了～</p><h3 id="1-VScode插件PicGo"><a href="#1-VScode插件PicGo" class="headerlink" title="1. VScode插件PicGo"></a>1. VScode插件PicGo</h3><p>需要用到Picgo这个插件，直接在vscode中搜索安装就行。</p><h3 id="2-PicGo的Github配置"><a href="#2-PicGo的Github配置" class="headerlink" title="2. PicGo的Github配置"></a>2. PicGo的Github配置</h3><p>打开设置，找到extensions中的Picgo的设置</p><p><img src="https://mmbiz.qpic.cn/mmbiz_png/KxvDktg1OnYrV4ia3Uxo26AwBCbL6tFmlKC9PIGWnyGFpV18LGJNtewA2nRWCn323sGIpXNzyTVlt216rIqU87Q/640?wx_fmt=png&amp;wxfrom=5&amp;wx_lazy=1&amp;wx_co=1" alt="图片"></p><p>往下拖找到github，进行配置:</p><p><img src="https://mmbiz.qpic.cn/mmbiz_png/KxvDktg1OnYrV4ia3Uxo26AwBCbL6tFmlnzohrdyQge2ibaJFKWfLBeEzRtlnv5s6wYbjB8TxorASEMe2MobBxgw/640?wx_fmt=png&amp;wxfrom=5&amp;wx_lazy=1&amp;wx_co=1" alt="图片"></p><p>首先是PicGo-Core设为</p><pre class="line-numbers language-none"><code class="language-none">github<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><p>Branch自己用git命令</p><pre class="line-numbers language-none"><code class="language-none">`git branch -a`<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><p>查看自己的branch，我就一个master，所以填的master</p><p>Path要和Repo搭配使用，到时候上传的图片就会到<strong>Repo+Path</strong>目录下，比如我的会传到：</p><pre class="line-numbers language-none"><code class="language-none">`wyl6/wyl6.github.io/imgs_for_blogs/`<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><p>下面，所以并不需要单独开个repo，加个目录就行。</p><p>注意，Path后面加”/“，不然后面一部分会当成图片名称合并进去。比如Path设为：</p><pre class="line-numbers language-none"><code class="language-none">`imgs_for_blogs/hello`<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><p>那么上传world.png时图片会成为：</p><pre class="line-numbers language-none"><code class="language-none">`imgs_for_blogs/helloworld.png`<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><p>最后一步的token，从github上重新生成一个就行(token只出现一次，之前的几乎找不到)。首先从头像那打开设置:</p><p><img src="https://mmbiz.qpic.cn/mmbiz_png/KxvDktg1OnYrV4ia3Uxo26AwBCbL6tFml7T3sVWS3rL22SvWgTe1Qab9FnUhg71yEhYWx0GaKRzBR4wuuSL3W1g/640?wx_fmt=png&amp;wxfrom=5&amp;wx_lazy=1&amp;wx_co=1" alt="图片"></p><p>找到最下面的Developer Settings:</p><p><img src="https://mmbiz.qpic.cn/mmbiz_png/KxvDktg1OnYrV4ia3Uxo26AwBCbL6tFmlBKkSuKqZDdoY9SVlePM1eUpy8DQYepTUnwkUuBibRMLIGhxDzY9gsNA/640?wx_fmt=png&amp;wxfrom=5&amp;wx_lazy=1&amp;wx_co=1" alt="图片"></p><p>从Personal Access里生成一个token，可以备份下次使用：<img src="https://mmbiz.qpic.cn/mmbiz_png/KxvDktg1OnYrV4ia3Uxo26AwBCbL6tFmlGoOAd8LfCZdux42AjYZSNVfydKcTBOP5U7qWKqomT1xYZRHUju5Uxg/640?wx_fmt=png&amp;wxfrom=5&amp;wx_lazy=1&amp;wx_co=1" alt="图片"></p><p>最后把token复制到PicGo设置里的Github Token里就行。然后就可以在vscode里使用图床了。</p><p>备注: 另外一种配置方法如下<br><img src="https://github.com/realzhangqingwei/legend-blog/source/_posts/This-is-a-test-blog/20220418211232.png" alt="20220418211232"></p><h3 id="3-图床命令"><a href="#3-图床命令" class="headerlink" title="3.图床命令"></a>3.图床命令</h3><p>三个简要命令：</p><h4 id="1-、-ctrl-alt-e"><a href="#1-、-ctrl-alt-e" class="headerlink" title="(1)、 ctrl+alt+e"></a>(1)、 <code>ctrl+alt+e</code></h4><p>从文件目录手动插入图片</p><h4 id="2-、ctrl-alt-u"><a href="#2-、ctrl-alt-u" class="headerlink" title="(2)、ctrl+alt+u"></a>(2)、<code>ctrl+alt+u</code></h4><p>从剪贴板插入图片</p><h4 id="3-、ctrl-alt-o"><a href="#3-、ctrl-alt-o" class="headerlink" title="(3)、ctrl+alt+o"></a>(3)、<code>ctrl+alt+o</code></h4><p>从输入目录插入图片，相对目录和绝对目录都行</p><h4 id="4-、-常用快捷键如下"><a href="#4-、-常用快捷键如下" class="headerlink" title="(4)、 常用快捷键如下"></a>(4)、 常用快捷键如下</h4><blockquote><p>从命令看，说一键不太准确，也就两三键吧。<br><img src="https://raw.githubusercontent.com/realzhangqingwei/realzhangqingwei.github.io/master/imgs_for_blogs/20220417103853.png" alt="20220417103853"></p></blockquote><h3 id="四、-参考链接"><a href="#四、-参考链接" class="headerlink" title="四、  参考链接"></a>四、  参考链接</h3><p><a href=""></a><a href="">https://mp.weixin.qq.com/s/2HnFrcwxHr5g2VvRB2N_JQ</a></p>]]></content>
+    
+    
+      
+      
+    <summary type="html">&lt;blockquote&gt;
+&lt;p&gt;&lt;a href=&quot;&quot;&gt;https://mp.weixin.qq.com/s/2HnFrcwxHr5g2VvRB2N_JQ&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&quot;一、最终效果&quot;&gt;&lt;a href=&quot;#一、最终效果&quot; class=&quot;</summary>
+      
+    
+    
+    
+    
+    <category term="Vscode" scheme="https://realzhangqingwei.github.io/tags/Vscode/"/>
+    
+    <category term="扩展" scheme="https://realzhangqingwei.github.io/tags/%E6%89%A9%E5%B1%95/"/>
     
   </entry>
   
