@@ -120,7 +120,7 @@ musics:
 # Whether to display the videos.
 # 是否在首页显示视频.
 video:
-  enable: false
+  enable: true
   showTitle: true
   title: 精彩视频
   url: # url和iframeUrl其中一个必填
