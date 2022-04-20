@@ -4,7 +4,7 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="keywords" content="Vscode两步搭建图床, 生活,编程,阅读,音乐,电影,运动,钓鱼">
+    <meta name="keywords" content="Vscode两步搭建图床, 生活,Devops,阅读,音乐,电影,运动,钓鱼">
     <meta name="description" content="
 https://mp.weixin.qq.com/s/2HnFrcwxHr5g2VvRB2N_JQ
 
@@ -291,6 +291,19 @@ https://mp.weixin.qq.com/s/2HnFrcwxHr5g2VvRB2N_JQ
 </header>
 
     
+<script src="/legend-blog/libs/cryptojs/crypto-js.min.js"></script>
+<script>
+    (function() {
+        let pwd = '';
+        if (pwd && pwd.length > 0) {
+            if (pwd !== CryptoJS.SHA256(prompt('请输入访问本文章的密码')).toString(CryptoJS.enc.Hex)) {
+                alert('密码错误，将返回主页！');
+                location.href = '/legend-blog/';
+            }
+        }
+    })();
+</script>
+
 
 
 
@@ -797,13 +810,13 @@ https://mp.weixin.qq.com/s/2HnFrcwxHr5g2VvRB2N_JQ
             <div class="article-badge left-badge text-color">
                 <i class="fas fa-chevron-left"></i>&nbsp;Previous</div>
             <div class="card">
-                <a href="/legend-blog/2022/04/17/2022-04-17-Python%E5%92%8CGo%E8%AF%AD%E8%A8%80%E5%AE%9E%E7%8E%B0%E9%98%B2%E7%81%AB%E5%A2%99%E5%B0%81%E5%A0%B5IP/">
+                <a href="/legend-blog/2022/04/17/2022-04-17-Prometheus%E6%9F%A5%E8%AF%A2%E8%AE%A1%E7%AE%97Kubernetes%E9%9B%86%E7%BE%A4%E4%B8%ADPod%20%E7%9A%84CPU%E3%80%81%E5%86%85%E5%AD%98%E4%BD%BF%E7%94%A8%E7%8E%87%E3%80%81%E6%B5%81%E9%87%8F%E7%9B%91%E6%8E%A7%E6%8C%87%E6%A0%87/">
                     <div class="card-image">
                         
                         
-                        <img src="/legend-blog/medias/featureimages/18.jpg" class="responsive-img" alt="Python和Go语言实现防火墙封堵IP">
+                        <img src="/legend-blog/medias/featureimages/16.jpg" class="responsive-img" alt="Prometheus查询计算Kubernetes集群中Pod 的CPU、内存使用率、流量监控指标">
                         
-                        <span class="card-title">Python和Go语言实现防火墙封堵IP</span>
+                        <span class="card-title">Prometheus查询计算Kubernetes集群中Pod 的CPU、内存使用率、流量监控指标</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
@@ -827,28 +840,20 @@ https://mp.weixin.qq.com/s/2HnFrcwxHr5g2VvRB2N_JQ
                 
                 <div class="card-action article-tags">
                     
-                    <a href="/legend-blog/tags/Python/">
-                        <span class="chip bg-color">Python</span>
+                    <a href="/legend-blog/tags/kubernetes/">
+                        <span class="chip bg-color">kubernetes</span>
                     </a>
                     
-                    <a href="/legend-blog/tags/Go/">
-                        <span class="chip bg-color">Go</span>
+                    <a href="/legend-blog/tags/docker/">
+                        <span class="chip bg-color">docker</span>
                     </a>
                     
-                    <a href="/legend-blog/tags/%E5%8D%8E%E4%B8%BA/">
-                        <span class="chip bg-color">华为</span>
+                    <a href="/legend-blog/tags/%E5%AE%B9%E5%99%A8/">
+                        <span class="chip bg-color">容器</span>
                     </a>
                     
-                    <a href="/legend-blog/tags/%E7%BD%91%E7%BB%9C%E8%AE%BE%E5%A4%87/">
-                        <span class="chip bg-color">网络设备</span>
-                    </a>
-                    
-                    <a href="/legend-blog/tags/%E9%98%B2%E7%81%AB%E5%A2%99/">
-                        <span class="chip bg-color">防火墙</span>
-                    </a>
-                    
-                    <a href="/legend-blog/tags/Ensp/">
-                        <span class="chip bg-color">Ensp</span>
+                    <a href="/legend-blog/tags/%E7%9B%91%E6%8E%A7/">
+                        <span class="chip bg-color">监控</span>
                     </a>
                     
                 </div>
@@ -914,6 +919,43 @@ https://mp.weixin.qq.com/s/2HnFrcwxHr5g2VvRB2N_JQ
 
 </div>
 
+
+<script>
+    $('#articleContent').on('copy', function (e) {
+        // IE8 or earlier browser is 'undefined'
+        if (typeof window.getSelection === 'undefined') return;
+
+        var selection = window.getSelection();
+        // if the selection is short let's not annoy our users.
+        if (('' + selection).length < Number.parseInt('1200')) {
+            return;
+        }
+
+        // create a div outside of the visible area and fill it with the selected text.
+        var bodyElement = document.getElementsByTagName('body')[0];
+        var newdiv = document.createElement('div');
+        newdiv.style.position = 'absolute';
+        newdiv.style.left = '-99999px';
+        bodyElement.appendChild(newdiv);
+        newdiv.appendChild(selection.getRangeAt(0).cloneContents());
+
+        // we need a <pre> tag workaround.
+        // otherwise the text inside "pre" loses all the line breaks!
+        if (selection.getRangeAt(0).commonAncestorContainer.nodeName === 'PRE' || selection.getRangeAt(0).commonAncestorContainer.nodeName === 'CODE') {
+            newdiv.innerHTML = "<pre>" + newdiv.innerHTML + "</pre>";
+        }
+
+        var url = document.location.href;
+        newdiv.innerHTML += '<br />'
+            + 'From: 捕风的legend<br />'
+            + 'Author: 捕风的legend<br />'
+            + 'Link: <a href="' + url + '">' + url + '</a><br />'
+            + '本文章著作权归作者所有，任何形式的转载都请注明出处。';
+
+        selection.selectAllChildren(newdiv);
+        window.setTimeout(function () {bodyElement.removeChild(newdiv);}, 200);
+    });
+</script>
 
 
 <!-- 代码块功能依赖 -->
@@ -1333,9 +1375,25 @@ $(function () {
     
 
     <!-- 雪花特效 -->
+     
+        <script type="text/javascript">
+            // 只在桌面版网页启用特效
+            var windowWidth = $(window).width();
+            if (windowWidth > 768) {
+                document.write('<script type="text/javascript" src="/legend-blog/libs/others/snow.js"><\/script>');
+            }
+        </script>
     
 
     <!-- 鼠标星星特效 -->
+     
+        <script type="text/javascript">
+            // 只在桌面版网页启用特效
+            var windowWidth = $(window).width();
+            if (windowWidth > 768) {
+                document.write('<script type="text/javascript" src="/legend-blog/libs/others/star.js"><\/script>');
+            }
+        </script>
     
 
      

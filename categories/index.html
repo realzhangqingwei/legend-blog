@@ -4,7 +4,7 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="keywords" content="Categories, 生活,编程,阅读,音乐,电影,运动,钓鱼">
+    <meta name="keywords" content="Categories, 生活,Devops,阅读,音乐,电影,运动,钓鱼">
     <meta name="description" content="假如幸福来敲门.">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
@@ -293,7 +293,7 @@
         <div class="brand">
             <div class="title center-align">
                 
-                爱拼才会赢, 风雨之后见彩虹!
+                爱拼才会赢, 风雨之后见彩虹
                 
             </div>
 
@@ -745,9 +745,25 @@ $(function () {
     
 
     <!-- 雪花特效 -->
+     
+        <script type="text/javascript">
+            // 只在桌面版网页启用特效
+            var windowWidth = $(window).width();
+            if (windowWidth > 768) {
+                document.write('<script type="text/javascript" src="/legend-blog/libs/others/snow.js"><\/script>');
+            }
+        </script>
     
 
     <!-- 鼠标星星特效 -->
+     
+        <script type="text/javascript">
+            // 只在桌面版网页启用特效
+            var windowWidth = $(window).width();
+            if (windowWidth > 768) {
+                document.write('<script type="text/javascript" src="/legend-blog/libs/others/star.js"><\/script>');
+            }
+        </script>
     
 
      
