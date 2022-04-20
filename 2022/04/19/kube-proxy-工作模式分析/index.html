@@ -1,0 +1,1896 @@
+<!DOCTYPE HTML>
+<html lang="张庆伟">
+
+
+<head>
+    <meta charset="utf-8">
+    <meta name="keywords" content="kube-proxy 工作模式分析, 生活,编程,阅读,音乐,电影,运动,钓鱼">
+    <meta name="description" content="kube-proxy 工作模式分析">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="renderer" content="webkit|ie-stand|ie-comp">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="referrer" content="no-referrer-when-downgrade">
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+
+
+    
+
+    <title>kube-proxy 工作模式分析 | 捕风的legend</title>
+    <link rel="icon" type="image/png" href="/legend-blog/favicon.png">
+
+    <link rel="stylesheet" type="text/css" href="/legend-blog/libs/awesome/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="/legend-blog/libs/materialize/materialize.min.css">
+    <link rel="stylesheet" type="text/css" href="/legend-blog/libs/aos/aos.css">
+    <link rel="stylesheet" type="text/css" href="/legend-blog/libs/animate/animate.min.css">
+    <link rel="stylesheet" type="text/css" href="/legend-blog/libs/lightGallery/css/lightgallery.min.css">
+    <link rel="stylesheet" type="text/css" href="/legend-blog/css/matery.css">
+    <link rel="stylesheet" type="text/css" href="/legend-blog/css/my.css">
+
+    <script src="/legend-blog/libs/jquery/jquery-3.6.0.min.js"></script>
+
+<meta name="generator" content="Hexo 6.1.0">
+<style>.github-emoji { position: relative; display: inline-block; width: 1.2em; min-height: 1.2em; overflow: hidden; vertical-align: top; color: transparent; }  .github-emoji > span { position: relative; z-index: 10; }  .github-emoji img, .github-emoji .fancybox { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; text-decoration: none !important; user-select: none !important; cursor: auto !important; }  .github-emoji img { height: 1.2em !important; width: 1.2em !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; user-select: none !important; cursor: auto !important; } .github-emoji-fallback { color: inherit; } .github-emoji-fallback img { opacity: 0 !important; }</style>
+<link rel="alternate" href="/legend-blog/atom.xml" title="捕风的legend" type="application/atom+xml">
+<link rel="stylesheet" href="/legend-blog/css/prism-tomorrow.css" type="text/css"></head>
+
+
+<body>
+    <header class="navbar-fixed">
+    <nav id="headNav" class="bg-color nav-transparent">
+        <div id="navContainer" class="nav-wrapper container">
+            <div class="brand-logo">
+                <a href="/legend-blog/" class="waves-effect waves-light">
+                    
+                    <img src="/legend-blog/medias/logo.png" class="logo-img" alt="LOGO">
+                    
+                    <span class="logo-span">捕风的legend</span>
+                </a>
+            </div>
+            
+
+<a href="#" data-target="mobile-nav" class="sidenav-trigger button-collapse"><i class="fas fa-bars"></i></a>
+<ul class="right nav-menu">
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/legend-blog/" class="waves-effect waves-light">
+      
+      <i class="fas fa-home" style="zoom: 0.6;"></i>
+      
+      <span>主页</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/legend-blog/tags" class="waves-effect waves-light">
+      
+      <i class="fas fa-tags" style="zoom: 0.6;"></i>
+      
+      <span>标签</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/legend-blog/categories" class="waves-effect waves-light">
+      
+      <i class="fas fa-bookmark" style="zoom: 0.6;"></i>
+      
+      <span>分类</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/legend-blog/archives" class="waves-effect waves-light">
+      
+      <i class="fas fa-archive" style="zoom: 0.6;"></i>
+      
+      <span>归档</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/legend-blog/about" class="waves-effect waves-light">
+      
+      <i class="fas fa-user-circle" style="zoom: 0.6;"></i>
+      
+      <span>关于</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/legend-blog/friends" class="waves-effect waves-light">
+      
+      <i class="fas fa-address-book" style="zoom: 0.6;"></i>
+      
+      <span>友情链接</span>
+    </a>
+    
+  </li>
+  
+  <li>
+    <a href="#searchModal" class="modal-trigger waves-effect waves-light">
+      <i id="searchIcon" class="fas fa-search" title="Search" style="zoom: 0.85;"></i>
+    </a>
+  </li>
+</ul>
+
+
+<div id="mobile-nav" class="side-nav sidenav">
+
+    <div class="mobile-head bg-color">
+        
+        <img src="/legend-blog/medias/logo.png" class="logo-img circle responsive-img">
+        
+        <div class="logo-name">捕风的legend</div>
+        <div class="logo-desc">
+            
+            假如幸福来敲门.
+            
+        </div>
+    </div>
+
+    <ul class="menu-list mobile-menu-list">
+        
+        <li class="m-nav-item">
+	  
+		<a href="/legend-blog/" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-home"></i>
+			
+			主页
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/legend-blog/tags" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-tags"></i>
+			
+			标签
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/legend-blog/categories" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-bookmark"></i>
+			
+			分类
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/legend-blog/archives" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-archive"></i>
+			
+			归档
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/legend-blog/about" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-user-circle"></i>
+			
+			关于
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/legend-blog/friends" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-address-book"></i>
+			
+			友情链接
+		</a>
+          
+        </li>
+        
+        
+        <li><div class="divider"></div></li>
+        <li>
+            <a href="https://github.com/realzhangqingwei/" class="waves-effect waves-light" target="_blank">
+                <i class="fab fa-github-square fa-fw"></i>Fork Me
+            </a>
+        </li>
+        
+    </ul>
+</div>
+
+
+        </div>
+
+        
+            <style>
+    .nav-transparent .github-corner {
+        display: none !important;
+    }
+
+    .github-corner {
+        position: absolute;
+        z-index: 10;
+        top: 0;
+        right: 0;
+        border: 0;
+        transform: scale(1.1);
+    }
+
+    .github-corner svg {
+        color: #0f9d58;
+        fill: #fff;
+        height: 64px;
+        width: 64px;
+    }
+
+    .github-corner:hover .octo-arm {
+        animation: a 0.56s ease-in-out;
+    }
+
+    .github-corner .octo-arm {
+        animation: none;
+    }
+
+    @keyframes a {
+        0%,
+        to {
+            transform: rotate(0);
+        }
+        20%,
+        60% {
+            transform: rotate(-25deg);
+        }
+        40%,
+        80% {
+            transform: rotate(10deg);
+        }
+    }
+</style>
+
+<a href="https://github.com/realzhangqingwei/" class="github-corner tooltipped hide-on-med-and-down" target="_blank"
+   data-tooltip="Fork Me" data-position="left" data-delay="50">
+    <svg viewBox="0 0 250 250" aria-hidden="true">
+        <path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path>
+        <path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2"
+              fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path>
+        <path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z"
+              fill="currentColor" class="octo-body"></path>
+    </svg>
+</a>
+        
+    </nav>
+
+</header>
+
+    
+
+
+
+<div class="bg-cover pd-header post-cover" style="background-image: url('/legend-blog/medias/featureimages/23.jpg')">
+    <div class="container" style="right: 0px;left: 0px;">
+        <div class="row">
+            <div class="col s12 m12 l12">
+                <div class="brand">
+                    <h1 class="description center-align post-title">kube-proxy 工作模式分析</h1>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+<main class="post-container content">
+
+    
+    <link rel="stylesheet" href="/legend-blog/libs/tocbot/tocbot.css">
+<style>
+    #articleContent h1::before,
+    #articleContent h2::before,
+    #articleContent h3::before,
+    #articleContent h4::before,
+    #articleContent h5::before,
+    #articleContent h6::before {
+        display: block;
+        content: " ";
+        height: 100px;
+        margin-top: -100px;
+        visibility: hidden;
+    }
+
+    #articleContent :focus {
+        outline: none;
+    }
+
+    .toc-fixed {
+        position: fixed;
+        top: 64px;
+    }
+
+    .toc-widget {
+        width: 345px;
+        padding-left: 20px;
+    }
+
+    .toc-widget .toc-title {
+        padding: 35px 0 15px 17px;
+        font-size: 1.5rem;
+        font-weight: bold;
+        line-height: 1.5rem;
+    }
+
+    .toc-widget ol {
+        padding: 0;
+        list-style: none;
+    }
+
+    #toc-content {
+        padding-bottom: 30px;
+        overflow: auto;
+    }
+
+    #toc-content ol {
+        padding-left: 10px;
+    }
+
+    #toc-content ol li {
+        padding-left: 10px;
+    }
+
+    #toc-content .toc-link:hover {
+        color: #42b983;
+        font-weight: 700;
+        text-decoration: underline;
+    }
+
+    #toc-content .toc-link::before {
+        background-color: transparent;
+        max-height: 25px;
+
+        position: absolute;
+        right: 23.5vw;
+        display: block;
+    }
+
+    #toc-content .is-active-link {
+        color: #42b983;
+    }
+
+    #floating-toc-btn {
+        position: fixed;
+        right: 15px;
+        bottom: 76px;
+        padding-top: 15px;
+        margin-bottom: 0;
+        z-index: 998;
+    }
+
+    #floating-toc-btn .btn-floating {
+        width: 48px;
+        height: 48px;
+    }
+
+    #floating-toc-btn .btn-floating i {
+        line-height: 48px;
+        font-size: 1.4rem;
+    }
+</style>
+<div class="row">
+    <div id="main-content" class="col s12 m12 l9">
+        <!-- 文章内容详情 -->
+<div id="artDetail">
+    <div class="card">
+        <div class="card-content article-info">
+            <div class="row tag-cate">
+                <div class="col s7">
+                    
+                    <div class="article-tag">
+                        
+                            <a href="/legend-blog/tags/kubernetes/">
+                                <span class="chip bg-color">kubernetes</span>
+                            </a>
+                        
+                            <a href="/legend-blog/tags/iptables/">
+                                <span class="chip bg-color">iptables</span>
+                            </a>
+                        
+                            <a href="/legend-blog/tags/ipvs/">
+                                <span class="chip bg-color">ipvs</span>
+                            </a>
+                        
+                            <a href="/legend-blog/tags/%E7%BD%91%E7%BB%9C/">
+                                <span class="chip bg-color">网络</span>
+                            </a>
+                        
+                    </div>
+                    
+                </div>
+                <div class="col s5 right-align">
+                    
+                    <div class="post-cate">
+                        <i class="fas fa-bookmark fa-fw icon-category"></i>
+                        
+                            <a href="/legend-blog/categories/programming/" class="post-category">
+                                编程
+                            </a>
+                        
+                    </div>
+                    
+                </div>
+            </div>
+
+            <div class="post-info">
+                
+                <div class="post-date info-break-policy">
+                    <i class="far fa-calendar-minus fa-fw"></i>Publish Date:&nbsp;&nbsp;
+                    2022-04-19
+                </div>
+                
+
+                
+                <div class="post-date info-break-policy">
+                    <i class="far fa-calendar-check fa-fw"></i>Update Date:&nbsp;&nbsp;
+                    2022-04-19
+                </div>
+                
+
+                
+                <div class="info-break-policy">
+                    <i class="far fa-file-word fa-fw"></i>Word Count:&nbsp;&nbsp;
+                    5.3k
+                </div>
+                
+
+                
+                <div class="info-break-policy">
+                    <i class="far fa-clock fa-fw"></i>Read Times:&nbsp;&nbsp;
+                    28 Min
+                </div>
+                
+
+                
+                    <div id="busuanzi_container_page_pv" class="info-break-policy">
+                        <i class="far fa-eye fa-fw"></i>Read Count:&nbsp;&nbsp;
+                        <span id="busuanzi_value_page_pv"></span>
+                    </div>
+				
+            </div>
+        </div>
+        <hr class="clearfix">
+
+        
+        <!-- 是否加载使用自带的 prismjs. -->
+        <link rel="stylesheet" href="/legend-blog/libs/prism/prism.css">
+        
+
+        
+
+        <div class="card-content article-card-content">
+            <div id="articleContent">
+                <h2 id="一、-Services"><a href="#一、-Services" class="headerlink" title="一、 Services"></a>一、 Services</h2><h3 id="1、集群所有-services-信息如下："><a href="#1、集群所有-services-信息如下：" class="headerlink" title="1、集群所有 services 信息如下："></a>1、集群所有 services 信息如下：</h3><pre class="line-numbers language-none"><code class="language-none">root@kube:~# kubectl get svc --all-namespaces
+
+NAMESPACE     NAME                   TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)                        AGE
+
+default       appsvc1                ClusterIP   10.99.235.135    &lt;none&gt;        80/TCP                         42d
+
+default       appsvc2                ClusterIP   10.102.67.19     &lt;none&gt;        80/TCP                         42d
+
+default       coredns                ClusterIP   10.108.180.158   &lt;none&gt;        53/UDP,53/TCP                  19d
+
+default       coredns-headless       ClusterIP   None             &lt;none&gt;        53/UDP,53/TCP                  19d
+
+default       kubernetes             ClusterIP   10.96.0.1        &lt;none&gt;        443/TCP                        62d
+
+ingress       default-backend        ClusterIP   10.100.169.254   &lt;none&gt;        80/TCP                         42d
+
+ingress       nginx-ingress          NodePort    10.97.11.0       &lt;none&gt;        80:30000/TCP,18080:32000/TCP   42d
+
+ingress       nginx-ingress-latest   NodePort    10.105.76.172    &lt;none&gt;        80:30001/TCP,18080:32001/TCP   10d
+
+kube-system   calico-etcd            ClusterIP   10.96.232.136    &lt;none&gt;        6666/TCP                       47h
+
+kube-system   kube-dns               ClusterIP   10.96.0.10       &lt;none&gt;        53/UDP,53/TCP                  62d
+
+kube-system   tiller-deploy          ClusterIP   10.99.131.10     &lt;none&gt;        44134/TCP                      50d<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="2、重点关注-ClusterIP-service："><a href="#2、重点关注-ClusterIP-service：" class="headerlink" title="2、重点关注  ClusterIP service："></a>2、重点关注  ClusterIP service：</h3><pre class="line-numbers language-none"><code class="language-none">root@kube:~# kubectl describe svc -n=default appsvc2
+
+Name:              appsvc2
+
+Namespace:         default
+
+Labels:            &lt;none&gt;
+
+Annotations:       &lt;none&gt;
+
+Selector:          app=app2
+
+Type:              ClusterIP
+
+IP:                10.102.67.19
+
+Port:              &lt;unset&gt;  80/TCP
+
+TargetPort:        80/TCP
+
+Endpoints:         192.168.42.138:80,192.168.42.189:80
+
+Session Affinity:  None
+
+Events:            &lt;none&gt;<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="3、和-ingress-nginx-ingress-latest-NodePort-service-和-NodePort-service"><a href="#3、和-ingress-nginx-ingress-latest-NodePort-service-和-NodePort-service" class="headerlink" title="3、和 ingress/nginx-ingress-latest NodePort service:和  NodePort service"></a>3、和 <code>ingress/nginx-ingress-latest </code>NodePort service:和  NodePort service</h3><pre class="line-numbers language-none"><code class="language-none">root@kube:~# kubectl describe svc -n=ingress nginx-ingress-latest
+
+Name:                     nginx-ingress-latest
+
+Namespace:                ingress
+
+Labels:                   &lt;none&gt;
+
+Annotations:              &lt;none&gt;
+
+Selector:                 app=nginx-ingress-lb-latest
+
+Type:                     NodePort
+
+IP:                       10.105.76.172
+
+Port:                     http  80/TCP
+
+TargetPort:               80/TCP
+
+NodePort:                 http  30001/TCP
+
+Endpoints:                10.0.2.15:80
+
+Port:                     http-mgmt  18080/TCP
+
+TargetPort:               18080/TCP
+
+NodePort:                 http-mgmt  32001/TCP
+
+Endpoints:                10.0.2.15:18080
+
+Session Affinity:         None
+
+External Traffic Policy:  Cluster
+
+Events:                   &lt;none&gt;<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h2 id="二、iptables-介绍"><a href="#二、iptables-介绍" class="headerlink" title="二、iptables 介绍"></a>二、iptables 介绍</h2><p>Iptables 由 filter, nat, mangle, raw, security 等几个 table 组成。一个 table 由内置的 chains 和 一些用户自定的 chains 组成。</p>
+<p>每个 chain 由一系列的用于匹配封包（packet）的 rules 组成，rule 指定了如果一个 packet 匹配将要执行的操作，也称为 target。</p>
+<p>rules 是顺序匹配的，如果一条 rule 没有匹配，则尝试匹配下一条 rule。如果一条 rule 匹配了，那么下一条 rule 由这一条 rule 的 target 值指定。target 可以为内置的 ACCEPT, DROP, LOG 等，也可以是一条用户自定义 chain，或者是 iptables-extensions(8) 里定义的扩展。</p>
+<p>Iptables 根据流量包是否从外部进入，是否需要转发以及是否从本机生成为封包指定不同的流经路径，具体描述如下图：</p>
+<p><img src="https://mmbiz.qpic.cn/mmbiz_png/z9BgVMEm7Ys1TronmcSRwYSGBaYjY0miaxUIQ6iakNBibC459Dn53AlUdKia4zaTrIdBC4677w97BJZwwDfmzAWLZA/640?wx_fmt=png&amp;wxfrom=5&amp;wx_lazy=1&amp;wx_co=1" alt="图片"></p>
+<h2 id="三、iptables-模式"><a href="#三、iptables-模式" class="headerlink" title="三、iptables 模式"></a>三、iptables 模式</h2><h4 id="1、入流量"><a href="#1、入流量" class="headerlink" title="1、入流量"></a>1、入流量</h4><p>入流量是指由集群外部访问 service 的流量。</p>
+<p>Iptables 入流量的 chain 路径是 PREROUTING@nat -&gt; INPUT@nat。</p>
+<h4 id="2、ClusterIP"><a href="#2、ClusterIP" class="headerlink" title="2、ClusterIP"></a>2、ClusterIP</h4><p>所有入流量跳转到 <code>KUBE-SERVICES </code>target chain:</p>
+<pre class="line-numbers language-none"><code class="language-none">Chain PREROUTING (policy ACCEPT 0 packets, 0 bytes)Chain PREROUTING (policy ACCEPT 0 packets, 0 bytes)
+
+pkts bytes target     prot opt in     out     source               destination
+
+    9   558 KUBE-SERVICES  all  --  *      *       0.0.0.0/0            0.0.0.0/0            /* kubernetes service portals */<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>KUBE-SERVICES chain 里为每个 ClusterIP service 定义一个名为 KUBE-SERVICE-XXX 格式的<br>target chain，匹配条件是 destination 为 service cluster ip 加上 dpt 为 service<br>port；又为所有 NodePort services 定义了一个 KUBE-NODEPORTS 的 target<br>chain（最后一项），其匹配条件是 ADDRTYPE match dst-type LOCAL，即目标地址为集群 Node 拥有的地址，符合<br>NodePort 的定义:</p>
+<pre class="line-numbers language-none"><code class="language-none">Chain KUBE-SERVICES (2 references)
+
+pkts bytes target     prot opt in     out     source               destination
+
+    0     0 KUBE-SVC-TCOU7JCQXEZGVUNU  udp  --  *      *       0.0.0.0/0            10.96.0.10           /* kube-system/kube-dns:dns cluster IP */ udp dpt:53
+
+    0     0 KUBE-SVC-4GOEBHW6OL3YSQ2  tcp  --  *      *       0.0.0.0/0            10.102.67.19         /* default/appsvc2: cluster IP */ tcp dpt:80
+
+    0     0 KUBE-SVC-H5SZ7UDBLB6PDUBU  tcp  --  *      *       0.0.0.0/0            10.97.11.0           /* ingress/nginx-ingress:http cluster IP */ tcp dpt:80
+
+    0     0 KUBE-SVC-RZBECLZWZRO5HL2J  tcp  --  *      *       0.0.0.0/0            10.105.76.172        /* ingress/nginx-ingress-latest:http cluster IP */ tcp dpt:80
+
+    0     0 KUBE-SVC-3DNKG2EQFQUJBSES  tcp  --  *      *       0.0.0.0/0            10.105.76.172        /* ingress/nginx-ingress-latest:http-mgmt cluster IP */ tcp dpt:18080
+
+    0     0 KUBE-SVC-K7J76NXP7AUZVFGS  tcp  --  *      *       0.0.0.0/0            10.99.131.10         /* kube-system/tiller-deploy:tiller cluster IP */ tcp dpt:44134
+
+    0     0 KUBE-SVC-PFRDUXZEVBX5AIDC  tcp  --  *      *       0.0.0.0/0            10.108.180.158       /* default/coredns:dns-tcp cluster IP */ tcp dpt:53
+
+    0     0 KUBE-SVC-BA5PBP57CSS4A4H3  tcp  --  *      *       0.0.0.0/0            10.97.11.0           /* ingress/nginx-ingress:http-mgmt cluster IP */ tcp dpt:18080
+
+    0     0 KUBE-SVC-JKXIOCCBPZXMHNK3  udp  --  *      *       0.0.0.0/0            10.108.180.158       /* default/coredns:dns cluster IP */ udp dpt:53
+
+    0     0 KUBE-SVC-BVEYTIW5E7VAUTUJ  tcp  --  *      *       0.0.0.0/0            10.100.169.254       /* ingress/default-backend: cluster IP */ tcp dpt:80
+
+    0     0 KUBE-SVC-ERIFXISQEP7F7OF4  tcp  --  *      *       0.0.0.0/0            10.96.0.10           /* kube-system/kube-dns:dns-tcp cluster IP */ tcp dpt:53
+
+    0     0 KUBE-SVC-JNI67WSAMQHGRFK3  tcp  --  *      *       0.0.0.0/0            10.99.235.135        /* default/appsvc1: cluster IP */ tcp dpt:80
+
+    0     0 KUBE-SVC-NPX46M4PTMTKRN6Y  tcp  --  *      *       0.0.0.0/0            10.96.0.1            /* default/kubernetes:https cluster IP */ tcp dpt:443
+
+    0     0 KUBE-SVC-NTYB37XIWATNM25Y  tcp  --  *      *       0.0.0.0/0            10.96.232.136        /* kube-system/calico-etcd: cluster IP */ tcp dpt:6666
+
+  19  1140 KUBE-NODEPORTS  all  --  *      *       0.0.0.0/0            0.0.0.0/0            /* kubernetes service nodeports; NOTE: this must be the last rule in this chain */ ADDRTYPE match dst-type LOCAL<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>先来观察 ClusterIP service 的 target chain，以 KUBE-SVC-4GOEBHW6OL3YSQ2S(default/appsvc2) 举例：</p>
+<p>这个 service chain 里为每个后端 endpoint 设置了一条 target chain，名为 KUBE-SEP-XXX 形式，并定义了每条 0.5 的访问比例，也就是 service 负载均衡的 ROUND ROBIN 策略。</p>
+<p>其中一个 endpoint 对应的 chain 规则如下：</p>
+<pre class="line-numbers language-none"><code class="language-none">Chain KUBE-SEP-T53XQEOLG435KKJB (1 references)
+
+pkts bytes target     prot opt in     out     source               destination
+
+    0     0 KUBE-MARK-MASQ  all  --  *      *       192.168.42.138       0.0.0.0/0
+
+    0     0 DNAT       tcp  --  *      *       0.0.0.0/0            0.0.0.0/0            tcp to:192.168.42.138:80<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>这里虽然定义了两条规则，但此时流量只会匹配到 DNAT 这一条规则，匹配条件是 destination:<br>192.168.42.138:80，即目标地址为后端 endpoint 地址，其 target 是将 ClusterIP 的流量使用<br>DNAT（Destination NAT）的方式转发到后端 endpoint(192.168.42.138:80)。</p>
+<h4 id="3、NodePort"><a href="#3、NodePort" class="headerlink" title="3、NodePort"></a>3、NodePort</h4><p>上面提到，所有 NodePort 入流量会匹配到 KUBE-NODEPORTS chain。这个 chain 里为每个 NodePort service 定义了两条规则，先关注 target 为 KUBE-SVC-XXX chain 形式的规则，以 KUBE-SVC-RZBECLZWZRO5HL2J 举例，其匹配条件是 tcp dpt:30001，即该 service(ingress/nginx-ingress-latest) 的 NodePort：(注：这里也会同时匹配 KUBE-MARK-MASQ 规则，但是这对封包的流经路径没有影响，见下面的出流量分析。)</p>
+<pre class="line-numbers language-none"><code class="language-none">Chain KUBE-NODEPORTS (1 references)
+
+pkts bytes target     prot opt in     out     source               destination
+
+    0     0 KUBE-MARK-MASQ  tcp  --  *      *       0.0.0.0/0            0.0.0.0/0            /* ingress/nginx-ingress:http */ tcp dpt:30000
+
+    0     0 KUBE-SVC-H5SZ7UDBLB6PDUBU  tcp  --  *      *       0.0.0.0/0            0.0.0.0/0            /* ingress/nginx-ingress:http */ tcp dpt:30000
+
+    0     0 KUBE-MARK-MASQ  tcp  --  *      *       0.0.0.0/0            0.0.0.0/0            /* ingress/nginx-ingress-latest:http */ tcp dpt:30001
+
+    0     0 KUBE-SVC-RZBECLZWZRO5HL2J  tcp  --  *      *       0.0.0.0/0            0.0.0.0/0            /* ingress/nginx-ingress-latest:http */ tcp dpt:30001
+
+    0     0 KUBE-MARK-MASQ  tcp  --  *      *       0.0.0.0/0            0.0.0.0/0            /* ingress/nginx-ingress-latest:http-mgmt */ tcp dpt:32001
+
+    0     0 KUBE-SVC-3DNKG2EQFQUJBSES  tcp  --  *      *       0.0.0.0/0            0.0.0.0/0            /* ingress/nginx-ingress-latest:http-mgmt */ tcp dpt:32001
+
+    0     0 KUBE-MARK-MASQ  tcp  --  *      *       0.0.0.0/0            0.0.0.0/0            /* ingress/nginx-ingress:http-mgmt */ tcp dpt:32000
+
+    0     0 KUBE-SVC-BA5PBP57CSS4A4H3  tcp  --  *      *       0.0.0.0/0            0.0.0.0/0            /* ingress/nginx-ingress:http-mgmt */ tcp dpt:32000<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>KUBE-SVC-RZBECLZWZRO5HL2J chain 又跳转到 KUBE-SEP-B25KHNOUZSX4F53T target:</p>
+<pre class="line-numbers language-none"><code class="language-none">Chain KUBE-SVC-RZBECLZWZRO5HL2J (2 references)
+
+pkts bytes target     prot opt in     out     source               destination
+
+    0     0 KUBE-SEP-B25KHNOUZSX4F53T  all  --  *      *       0.0.0.0/0            0.0.0.0/0<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>KUBE-SEP-B25KHNOUZSX4F53T chain 内容如下，其功能是使用 DNAT 将流量转发到后端 enpoint，与 ClusterIP service 无异:</p>
+<pre class="line-numbers language-none"><code class="language-none">Chain KUBE-SEP-B25KHNOUZSX4F53T (1 references)
+
+pkts bytes target     prot opt in     out     source               destination
+
+    0     0 KUBE-MARK-MASQ  all  --  *      *       10.0.2.15            0.0.0.0/0
+
+    0     0 DNAT       tcp  --  *      *       0.0.0.0/0            0.0.0.0/0            tcp to:10.0.2.15:80
+
+
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+
+<h3 id="4、出流量"><a href="#4、出流量" class="headerlink" title="4、出流量"></a>4、出流量</h3><p>出流量是指由集群内的 pod 访问 service 的流量。</p>
+<p>Iptables 出流量的 chain 路径是 OUTPUT@nat -&gt; POSTROUTING@nat。</p>
+<p>OUTPUT chain 如下，与入流量情形一样，也是所有流量跳转到 KUBE-SERVICES chain：</p>
+<pre class="line-numbers language-none"><code class="language-none">Chain OUTPUT (policy ACCEPT 24 packets, 1440 bytes)
+
+pkts bytes target     prot opt in     out     source               destination
+
+  804 48270 cali-OUTPUT  all  --  *      *       0.0.0.0/0            0.0.0.0/0            /* cali:tVnHkvAo15HuiPy0 */
+
+  870 52230 KUBE-SERVICES  all  --  *      *       0.0.0.0/0            0.0.0.0/0            /* kubernetes service portals */
+
+  384 23040 DOCKER     all  --  *      *       0.0.0.0/0           !127.0.0.0/8          ADDRTYPE match dst-type LOCAL
+
+ClusterIP<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>与入流量类似，ClusterIP service 的出流量也会匹配到各自 service 的 target chain:</p>
+<pre class="line-numbers language-none"><code class="language-none">Chain KUBE-SERVICES (2 references)
+
+pkts bytes target     prot opt in     out     source               destination
+
+    0     0 KUBE-SVC-TCOU7JCQXEZGVUNU  udp  --  *      *       0.0.0.0/0            10.96.0.10           /* kube-system/kube-dns:dns cluster IP */ udp dpt:53
+
+    0     0 KUBE-SVC-4GOEBHW6OL3YSQ2  tcp  --  *      *       0.0.0.0/0            10.102.67.19         /* default/appsvc2: cluster IP */ tcp dpt:80
+
+    0     0 KUBE-SVC-H5SZ7UDBLB6PDUBU  tcp  --  *      *       0.0.0.0/0            10.97.11.0           /* ingress/nginx-ingress:http cluster IP */ tcp dpt:80
+
+    0     0 KUBE-SVC-RZBECLZWZRO5HL2J  tcp  --  *      *       0.0.0.0/0            10.105.76.172        /* ingress/nginx-ingress-latest:http cluster IP */ tcp dpt:80
+
+    0     0 KUBE-SVC-3DNKG2EQFQUJBSES  tcp  --  *      *       0.0.0.0/0            10.105.76.172        /* ingress/nginx-ingress-latest:http-mgmt cluster IP */ tcp dpt:18080
+
+    0     0 KUBE-SVC-K7J76NXP7AUZVFGS  tcp  --  *      *       0.0.0.0/0            10.99.131.10         /* kube-system/tiller-deploy:tiller cluster IP */ tcp dpt:44134
+
+    0     0 KUBE-SVC-PFRDUXZEVBX5AIDC  tcp  --  *      *       0.0.0.0/0            10.108.180.158       /* default/coredns:dns-tcp cluster IP */ tcp dpt:53
+
+    0     0 KUBE-SVC-BA5PBP57CSS4A4H3  tcp  --  *      *       0.0.0.0/0            10.97.11.0           /* ingress/nginx-ingress:http-mgmt cluster IP */ tcp dpt:18080
+
+    0     0 KUBE-SVC-JKXIOCCBPZXMHNK3  udp  --  *      *       0.0.0.0/0            10.108.180.158       /* default/coredns:dns cluster IP */ udp dpt:53
+
+    0     0 KUBE-SVC-BVEYTIW5E7VAUTUJ  tcp  --  *      *       0.0.0.0/0            10.100.169.254       /* ingress/default-backend: cluster IP */ tcp dpt:80
+
+    0     0 KUBE-SVC-ERIFXISQEP7F7OF4  tcp  --  *      *       0.0.0.0/0            10.96.0.10           /* kube-system/kube-dns:dns-tcp cluster IP */ tcp dpt:53
+
+    0     0 KUBE-SVC-JNI67WSAMQHGRFK3  tcp  --  *      *       0.0.0.0/0            10.99.235.135        /* default/appsvc1: cluster IP */ tcp dpt:80
+
+    0     0 KUBE-SVC-NPX46M4PTMTKRN6Y  tcp  --  *      *       0.0.0.0/0            10.96.0.1            /* default/kubernetes:https cluster IP */ tcp dpt:443
+
+    0     0 KUBE-SVC-NTYB37XIWATNM25Y  tcp  --  *      *       0.0.0.0/0            10.96.232.136        /* kube-system/calico-etcd: cluster IP */ tcp dpt:6666
+
+  19  1140 KUBE-NODEPORTS  all  --  *      *       0.0.0.0/0            0.0.0.0/0            /* kubernetes service nodeports; NOTE: this must be the last rule in this chain */ ADDRTYPE match dst-type LOCAL<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>跳转以后，还是以 KUBE-SVC-4GOEBHW6OL3YSQ2S(default/appsvc2) 举例，又跳转到 endpoint 对应的 target chain：</p>
+<pre class="line-numbers language-none"><code class="language-none">Chain KUBE-SVC-4GOEBHW6OL3YSQ2S (1 references)
+
+pkts bytes target     prot opt in     out     source               destination
+
+    0     0 KUBE-SEP-T53XQEOLG435KKJB  all  --  *      *       0.0.0.0/0            0.0.0.0/0            statistic mode random probability 0.50000000000
+
+    0     0 KUBE-SEP-KDPNMEHXV7C5OGG2  all  --  *      *       0.0.0.0/0            0.0.0.0/0<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>在 endpoint 对应的 chain 里，出流量会匹配第一条规则，匹配条件是 source: 192.168.42.138，即来源地址是后端 endpoint:</p>
+<pre class="line-numbers language-none"><code class="language-none">Chain KUBE-SEP-T53XQEOLG435KKJB (1 references)
+
+pkts bytes target     prot opt in     out     source               destination
+
+    0     0 KUBE-MARK-MASQ  all  --  *      *       192.168.42.138       0.0.0.0/0
+
+    0     0 DNAT       tcp  --  *      *       0.0.0.0/0            0.0.0.0/0            tcp to:192.168.42.138:80<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>此时封包进一步跳转进入到 KUBE-MARK-MASQ chain 中，其规则就一条，给流量封包打上 0x4000 的标记：</p>
+<pre class="line-numbers language-none"><code class="language-none">Chain KUBE-MARK-MASQ (25 references)
+
+pkts bytes target     prot opt in     out     source               destination
+
+    0     0 MARK       all  --  *      *       0.0.0.0/0            0.0.0.0/0            MARK or 0x4000<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>至此出流量的 OUTPUT chain 走完。接下来进行 POSTROUTING chain：</p>
+<pre class="line-numbers language-none"><code class="language-none">Chain POSTROUTING (policy ACCEPT 24 packets, 1440 bytes)
+
+pkts bytes target     prot opt in     out     source               destination
+
+  804 48270 cali-POSTROUTING  all  --  *      *       0.0.0.0/0            0.0.0.0/0            /* cali:O3lYWMrLQYEMJtB5 */
+
+  870 52230 KUBE-POSTROUTING  all  --  *      *       0.0.0.0/0            0.0.0.0/0            /* kubernetes postrouting rules */
+
+    0     0 MASQUERADE  all  --  *      !docker0  172.18.0.0/16        0.0.0.0/0
+
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>这里出流量跳转到 KUBE-POSTROUTING chain：(疑问：cali-POSTROUTING 和 KUBE-POSTROUTING 匹配规则一致，第一条为什么没有屏蔽第二条的执行呢？有待进一步调查。)</p>
+<pre class="line-numbers language-none"><code class="language-none">Chain KUBE-POSTROUTING (1 references)
+
+pkts bytes target     prot opt in     out     source               destination
+
+    0     0 MASQUERADE  all  --  *      *       0.0.0.0/0            0.0.0.0/0            /* kubernetes service traffic requiring SNAT */ mark match 0x4000/0x4000 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>KUBE-POSTROUTING chain 很简单，就是将之前标记过 0x4000 的封包进行 MASQUERADE。MASQUERADE<br>是一种更健壮的 SNAT，即将封包的源地址由后端的 endpoint 变更为 Cluster IP。之所以在这里进行源地址转换，是因为由<br>endpoint(pod1) 的发出的请求封包， 经过 service 的分发到达另一个 endpoint(pod2) 时，由于所有的<br>endpoints(pods) 都处于同一子网，根据路由定义在一个子网的流量封包不会经过路由，而是直接返回到请求 pod。请求封包此前不做<br>SNAT 的话，因为请求 endpoint(pod1) 访问的地址是 Cluster IP，返回封包的源地址却是 pod2<br>的地址，因此这个响应包会被拒绝。解决办法就是 pod1 访问 service（会被分发到 pod2）时，使用 SNAT(MASQUERADE)<br>伪装源地址为 ClusterIP，这样 pod2 的返回封包就会经过 service 的进一步路由。</p>
+<p><img src="https://mmbiz.qpic.cn/mmbiz_png/z9BgVMEm7Ys1TronmcSRwYSGBaYjY0miaEDoMZBXRt4DzbjUC3h77Lhjp4mnstTjkLftcOich8R0I0Df5vR4fJCQ/640?wx_fmt=png&amp;wxfrom=5&amp;wx_lazy=1&amp;wx_co=1" alt="图片"></p>
+<h4 id="5、NodePort"><a href="#5、NodePort" class="headerlink" title="5、NodePort"></a>5、NodePort</h4><p>与 ClusterIP service 不同，在 KUBE-SERVICES chain 中，NodePort service 的出流量只会匹配最后一项的 KUBE-NODEPORTS target:</p>
+<pre class="line-numbers language-none"><code class="language-none">Chain KUBE-SERVICES (2 references)
+
+pkts bytes target     prot opt in     out     source               destination
+
+    0     0 KUBE-SVC-TCOU7JCQXEZGVUNU  udp  --  *      *       0.0.0.0/0            10.96.0.10           /* kube-system/kube-dns:dns cluster IP */ udp dpt:53
+
+    0     0 KUBE-SVC-4GOEBHW6OL3YSQ2  tcp  --  *      *       0.0.0.0/0            10.102.67.19         /* default/appsvc2: cluster IP */ tcp dpt:80
+
+    0     0 KUBE-SVC-H5SZ7UDBLB6PDUBU  tcp  --  *      *       0.0.0.0/0            10.97.11.0           /* ingress/nginx-ingress:http cluster IP */ tcp dpt:80
+
+    0     0 KUBE-SVC-RZBECLZWZRO5HL2J  tcp  --  *      *       0.0.0.0/0            10.105.76.172        /* ingress/nginx-ingress-latest:http cluster IP */ tcp dpt:80
+
+    0     0 KUBE-SVC-3DNKG2EQFQUJBSES  tcp  --  *      *       0.0.0.0/0            10.105.76.172        /* ingress/nginx-ingress-latest:http-mgmt cluster IP */ tcp dpt:18080
+
+    0     0 KUBE-SVC-K7J76NXP7AUZVFGS  tcp  --  *      *       0.0.0.0/0            10.99.131.10         /* kube-system/tiller-deploy:tiller cluster IP */ tcp dpt:44134
+
+    0     0 KUBE-SVC-PFRDUXZEVBX5AIDC  tcp  --  *      *       0.0.0.0/0            10.108.180.158       /* default/coredns:dns-tcp cluster IP */ tcp dpt:53
+
+    0     0 KUBE-SVC-BA5PBP57CSS4A4H3  tcp  --  *      *       0.0.0.0/0            10.97.11.0           /* ingress/nginx-ingress:http-mgmt cluster IP */ tcp dpt:18080
+
+    0     0 KUBE-SVC-JKXIOCCBPZXMHNK3  udp  --  *      *       0.0.0.0/0            10.108.180.158       /* default/coredns:dns cluster IP */ udp dpt:53
+
+    0     0 KUBE-SVC-BVEYTIW5E7VAUTUJ  tcp  --  *      *       0.0.0.0/0            10.100.169.254       /* ingress/default-backend: cluster IP */ tcp dpt:80
+
+    0     0 KUBE-SVC-ERIFXISQEP7F7OF4  tcp  --  *      *       0.0.0.0/0            10.96.0.10           /* kube-system/kube-dns:dns-tcp cluster IP */ tcp dpt:53
+
+    0     0 KUBE-SVC-JNI67WSAMQHGRFK3  tcp  --  *      *       0.0.0.0/0            10.99.235.135        /* default/appsvc1: cluster IP */ tcp dpt:80
+
+    0     0 KUBE-SVC-NPX46M4PTMTKRN6Y  tcp  --  *      *       0.0.0.0/0            10.96.0.1            /* default/kubernetes:https cluster IP */ tcp dpt:443
+
+    0     0 KUBE-SVC-NTYB37XIWATNM25Y  tcp  --  *      *       0.0.0.0/0            10.96.232.136        /* kube-system/calico-etcd: cluster IP */ tcp dpt:6666
+
+  19  1140 KUBE-NODEPORTS  all  --  *      *       0.0.0.0/0            0.0.0.0/0            /* kubernetes service nodeports; NOTE: this must be the last rule in this chain */ ADDRTYPE match dst-type LOCAL<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>在 KUBE-NODEPORTS 中，与入流量的 NodePort 服务相同，出流量也会匹配到某个 KUBE-SERVICE-XXX，以<br>KUBE-SVC-RZBECLZWZRO5HL2J(ingress/nginx-ingress-latest) 举例，其匹配条件是 tcp<br>dpt:30001，即出流量目标端口是该 service 的 NodePort。(注：这里也会同时匹配 KUBE-MARK-MASQ<br>规则，直接对封包打标记，原因未知。)</p>
+<pre class="line-numbers language-none"><code class="language-none">Chain KUBE-NODEPORTS (1 references)
+
+pkts bytes target     prot opt in     out     source               destination
+
+    0     0 KUBE-MARK-MASQ  tcp  --  *      *       0.0.0.0/0            0.0.0.0/0            /* ingress/nginx-ingress:http */ tcp dpt:30000
+
+    0     0 KUBE-SVC-H5SZ7UDBLB6PDUBU  tcp  --  *      *       0.0.0.0/0            0.0.0.0/0            /* ingress/nginx-ingress:http */ tcp dpt:30000
+
+    0     0 KUBE-MARK-MASQ  tcp  --  *      *       0.0.0.0/0            0.0.0.0/0            /* ingress/nginx-ingress-latest:http */ tcp dpt:30001
+
+    0     0 KUBE-SVC-RZBECLZWZRO5HL2J  tcp  --  *      *       0.0.0.0/0            0.0.0.0/0            /* ingress/nginx-ingress-latest:http */ tcp dpt:30001
+
+    0     0 KUBE-MARK-MASQ  tcp  --  *      *       0.0.0.0/0            0.0.0.0/0            /* ingress/nginx-ingress-latest:http-mgmt */ tcp dpt:32001
+
+    0     0 KUBE-SVC-3DNKG2EQFQUJBSES  tcp  --  *      *       0.0.0.0/0            0.0.0.0/0            /* ingress/nginx-ingress-latest:http-mgmt */ tcp dpt:32001
+
+    0     0 KUBE-MARK-MASQ  tcp  --  *      *       0.0.0.0/0            0.0.0.0/0            /* ingress/nginx-ingress:http-mgmt */ tcp dpt:32000
+
+    0     0 KUBE-SVC-BA5PBP57CSS4A4H3  tcp  --  *      *       0.0.0.0/0            0.0.0.0/0            /* ingress/nginx-ingress:http-mgmt */ tcp dpt:32000<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>KUBE-SVC-RZBECLZWZRO5HL2J chain 又跳转到 KUBE-SEP-B25KHNOUZSX4F53T target:</p>
+<pre class="line-numbers language-none"><code class="language-none">Chain KUBE-SVC-RZBECLZWZRO5HL2J (2 references)
+
+pkts bytes target     prot opt in     out     source               destination
+
+    0     0 KUBE-SEP-B25KHNOUZSX4F53T  all  --  *      *       0.0.0.0/0            0.0.0.0/0<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>在上面入流量的分析中有提到，入流量会匹配这里的 DNAT 规则，而出流量只会匹配到 KUBE-MARK-MASQ 这条规则，其匹配条件是来源地址为 source: 10.0.2.15，即来源地址为 endpoint 地址。</p>
+<pre class="line-numbers language-none"><code class="language-none">Chain KUBE-SEP-B25KHNOUZSX4F53T (1 references)
+
+pkts bytes target     prot opt in     out     source               destination
+
+    0     0 KUBE-MARK-MASQ  all  --  *      *       10.0.2.15            0.0.0.0/0
+
+    0     0 DNAT       tcp  --  *      *       0.0.0.0/0            0.0.0.0/0            tcp to:10.0.2.15:80<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>跳转后进入的 KUBE-MARK-MASQ chain 其规则就一条，给流量封包打上 0x4000 的标记：</p>
+<pre class="line-numbers language-none"><code class="language-none">Chain KUBE-MARK-MASQ (25 references)
+
+pkts bytes target     prot opt in     out     source               destination
+
+    0     0 MARK       all  --  *      *       0.0.0.0/0            0.0.0.0/0            MARK or 0x4000<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>至此出流量的 OUTPUT chain 走完。接下来进行 POSTROUTING chain：</p>
+<pre class="line-numbers language-none"><code class="language-none">Chain POSTROUTING (policy ACCEPT 24 packets, 1440 bytes)
+
+pkts bytes target     prot opt in     out     source               destination
+
+  804 48270 cali-POSTROUTING  all  --  *      *       0.0.0.0/0            0.0.0.0/0            /* cali:O3lYWMrLQYEMJtB5 */
+
+  870 52230 KUBE-POSTROUTING  all  --  *      *       0.0.0.0/0            0.0.0.0/0            /* kubernetes postrouting rules */
+
+    0     0 MASQUERADE  all  --  *      !docker0  172.18.0.0/16        0.0.0.0/0<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>很简单，出流量跳转到 KUBE-POSTROUTING chain：</p>
+<pre class="line-numbers language-none"><code class="language-none">Chain KUBE-POSTROUTING (1 references)
+
+pkts bytes target     prot opt in     out     source               destination
+
+    0     0 MASQUERADE  all  --  *      *       0.0.0.0/0            0.0.0.0/0            /* kubernetes service traffic requiring SNAT */ mark match 0x4000/0x4000 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>KUBE-POSTROUTING chain 也很简单，就是将之前标记过 0x4000 的封包进行 MASQUERADE。MASQUERADE<br>类似于 SNAT，即将封包的源地址由后端的 backend 转换为 Node ip，需要 MASQUERADE 原因见上面分析。</p>
+<p><img src="https://mmbiz.qpic.cn/mmbiz_png/z9BgVMEm7Ys1TronmcSRwYSGBaYjY0miaxAmSyahAWBPxJKuuIkaEHUpaatu4zOr5YxxgBq0z1icC6bdDnfmFfrQ/640?wx_fmt=png&amp;wxfrom=5&amp;wx_lazy=1&amp;wx_co=1" alt="图片"></p>
+<h2 id="四、IPVS-模式"><a href="#四、IPVS-模式" class="headerlink" title="四、IPVS 模式"></a>四、IPVS 模式</h2><h3 id="1、入流量-1"><a href="#1、入流量-1" class="headerlink" title="1、入流量"></a>1、入流量</h3><p>入流量是指由集群外部访问 service 的流量。</p>
+<p>Iptables 入流量的 chain 路径是 PREROUTING@nat -&gt; INPUT@nat。</p>
+<h3 id="2、ClusterIP-1"><a href="#2、ClusterIP-1" class="headerlink" title="2、ClusterIP"></a>2、ClusterIP</h3><p>Iptables 入流量的 chain 路径是 PREROUTING@nat -&gt; INPUT@nat。</p>
+<p>在 PREROUTING 阶段，流量跳转到 KUBE-SERVICES target chain:</p>
+<pre class="line-numbers language-none"><code class="language-none">Chain PREROUTING (policy ACCEPT 0 packets, 0 bytes)
+
+pkts bytes target     prot opt in     out     source               destination
+
+  11   652 cali-PREROUTING  all  --  *      *       0.0.0.0/0            0.0.0.0/0            /* cali:6gwbT8clXdHdC1b1 */
+
+  12   881 KUBE-SERVICES  all  --  *      *       0.0.0.0/0            0.0.0.0/0            /* kubernetes service portals */
+
+    3   140 DOCKER     all  --  *      *       0.0.0.0/0            0.0.0.0/0            ADDRTYPE match dst-type LOCAL<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>KUBE-SERVICES chain 如下：</p>
+<pre class="line-numbers language-none"><code class="language-none">Chain KUBE-SERVICES (2 references)
+
+pkts bytes target     prot opt in     out     source               destination
+
+    0     0 KUBE-MARK-MASQ  all  --  *      *       0.0.0.0/0            0.0.0.0/0            /* Kubernetes service cluster ip + port for masquerade purpose */ match-set KUBE-CLUSTER-IP src,dst
+
+    8   480 KUBE-NODE-PORT  all  --  *      *       0.0.0.0/0            0.0.0.0/0            ADDRTYPE match dst-type LOCAL
+
+    0     0 ACCEPT     all  --  *      *       0.0.0.0/0            0.0.0.0/0            match-set KUBE-CLUSTER-IP dst,dst<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+
+<p>ClusterIP service 的访问流量会匹配 KUBE-MARK-MASQ，其匹配规则是 match-set KUBE-CLUSTER-IP src,dst，即封包的 src 或者 dest 地址匹配内核中名为 KUBE-CLUSTER-IP 的 ipset。</p>
+<p>下一步就是为这些包打上标记：</p>
+<pre class="line-numbers language-none"><code class="language-none">Chain KUBE-MARK-MASQ (3 references)
+
+pkts bytes target     prot opt in     out     source               destination
+
+    0     0 MARK       all  --  *      *       0.0.0.0/0            0.0.0.0/0            MARK or 0x4000<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+
+<p>与 iptables 模式不同的是，此时封包在 iptables 的路径已经走完，并没有后续的 DNAT 到后端 endpoint 的流程，这一步的工作交由 IPVS 来完成。</p>
+<p>对于 default/appsvc2 ClusterIP service，其 IPVS 配置如下：</p>
+<pre class="line-numbers language-none"><code class="language-none">root@kube:~# ipvsadm -ln
+
+IP Virtual Server version 1.2.1 (size=4096)
+
+Prot LocalAddress:Port Scheduler Flags
+
+  -&gt; RemoteAddress:Port           Forward Weight ActiveConn InActConn
+
+TCP  10.102.67.19:80 rr
+
+  -&gt; 192.168.42.134:80            Masq    1      0          0
+
+  -&gt; 192.168.42.145:80            Masq    1      0          0<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+
+<h3 id="3、NodePort-1"><a href="#3、NodePort-1" class="headerlink" title="3、NodePort"></a>3、NodePort</h3><p>对于访问 NodePort service 来说，其流量第一步依然是经由 PREROUTING chain，而后跳转到 KUBE-SERVICES chain。</p>
+<p>在这里封包会匹配到 KUBE-NODE-PORT target chain，其匹配条件是 ADDRTYPE match dst-type LOCAL，即目标地址类型是 Node 配置的地址，这符合 NodePort 的定义。</p>
+<pre class="line-numbers language-none"><code class="language-none">Chain KUBE-SERVICES (2 references)
+
+pkts bytes target     prot opt in     out     source               destination
+
+    0     0 KUBE-MARK-MASQ  all  --  *      *       0.0.0.0/0            0.0.0.0/0            /* Kubernetes service cluster ip + port for masquerade purpose */ match-set KUBE-CLUSTER-IP src,dst
+
+    8   480 KUBE-NODE-PORT  all  --  *      *       0.0.0.0/0            0.0.0.0/0            ADDRTYPE match dst-type LOCAL
+
+    0     0 ACCEPT     all  --  *      *       0.0.0.0/0            0.0.0.0/0            match-set KUBE-CLUSTER-IP dst,dst<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>KUBE-NODE-PORT chain 配置如下，其会匹配符合 KUBE-NODE-PORT-TCP/UDP 的 ipset 的封包：</p>
+<pre class="line-numbers language-none"><code class="language-none">Chain KUBE-NODE-PORT (1 references)
+
+pkts bytes target     prot opt in     out     source               destination
+
+    0     0 KUBE-MARK-MASQ  tcp  --  *      *       0.0.0.0/0            0.0.0.0/0            /* Kubernetes nodeport TCP port for masquerade purpose */ match-set KUBE-NODE-PORT-TCP dst<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>跳转后进入 KUBE-MARK-MASQ chain，定义如下：</p>
+<pre class="line-numbers language-none"><code class="language-none">Chain KUBE-MARK-MASQ (3 references)
+
+pkts bytes target     prot opt in     out     source               destination
+
+    0     0 MARK       all  --  *      *       0.0.0.0/0            0.0.0.0/0            MARK or 0x4000<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+
+<p>至此封包在 iptables 的路径走完，后面交由 IPVS 来完成 ClusterIP 到 endpoint 的映射。</p>
+<p>对于 ingress/ingress-nginx-latest NodePort service，其 IPVS 配置如下：</p>
+<pre class="line-numbers language-none"><code class="language-none">root@kube:~# ipvsadm -ln
+
+IP Virtual Server version 1.2.1 (size=4096)
+
+Prot LocalAddress:Port Scheduler Flags
+
+  -&gt; RemoteAddress:Port           Forward Weight ActiveConn InActConn
+
+TCP  172.17.8.111:30001 rr
+
+  -&gt; 10.0.2.15:80                 Masq    1      0          0<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+
+<h3 id="4、出流量-1"><a href="#4、出流量-1" class="headerlink" title="4、出流量"></a>4、出流量</h3><p>出流量是指由集群内的 pod 访问 service 的流量。</p>
+<p>Iptables 出流量的 chain 路径是 OUTPUT@nat -&gt; POSTROUTING@nat。</p>
+<p>OUTPUT chain 如下，与入流量情形一样，也是所有流量跳转到 KUBE-SERVICES chain：</p>
+<pre class="line-numbers language-none"><code class="language-none">Chain OUTPUT (policy ACCEPT 15 packets, 900 bytes)
+
+pkts bytes target     prot opt in     out     source               destination
+
+  607 36468 cali-OUTPUT  all  --  *      *       0.0.0.0/0            0.0.0.0/0            /* cali:tVnHkvAo15HuiPy0 */
+
+  687 41156 KUBE-SERVICES  all  --  *      *       0.0.0.0/0            0.0.0.0/0            /* kubernetes service portals */
+
+  274 16328 DOCKER     all  --  *      *       0.0.0.0/0           !127.0.0.0/8          ADDRTYPE match dst-type LOCAL<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>而后的动作与入流量一致，不论 ClusterIP service 还是 NodePort service，都是为封包打上 0x4000<br>的标记。区别是至此入流量的 iptables 流程走完，而出流量还需要经过 nat 表的 POSTROUTING chain，其定义如下：</p>
+<pre class="line-numbers language-none"><code class="language-none">Chain POSTROUTING (policy ACCEPT 14 packets, 840 bytes)
+
+pkts bytes target     prot opt in     out     source               destination
+
+  610 36640 cali-POSTROUTING  all  --  *      *       0.0.0.0/0            0.0.0.0/0            /* cali:O3lYWMrLQYEMJtB5 */
+
+  690 41328 KUBE-POSTROUTING  all  --  *      *       0.0.0.0/0            0.0.0.0/0            /* kubernetes postrouting rules */
+
+    0     0 MASQUERADE  all  --  *      !docker0  172.18.0.0/16        0.0.0.0/0<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>进一步跳转到 KUBE-POSTROUTING chain：Chain KUBE-POSTROUTING (1 references)</p>
+<pre class="line-numbers language-none"><code class="language-none">Chain KUBE-POSTROUTING (1 references)
+
+pkts bytes target     prot opt in     out     source               destination
+
+    0     0 MASQUERADE  all  --  *      *       0.0.0.0/0            0.0.0.0/0            /* kubernetes service traffic requiring SNAT */ mark match 0x4000/0x4000
+
+    1    60 MASQUERADE  all  --  *      *       0.0.0.0/0            0.0.0.0/0            /* Kubernetes endpoints dst ip:port, source ip for solving hairpin purpose */ match-set KUBE-LOOP-BACK dst,dst,src<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>在这里，会为之前打上 0x4000 标记的出流量封包执行 MASQUERADE target，即类似于 SNAT 的一种操作，将其来源 IP 变更为 ClusterIP 或 Node ip。</p>
+<p>`<img src="https://mmbiz.qpic.cn/mmbiz_png/z9BgVMEm7Ys1TronmcSRwYSGBaYjY0miaibEWzw2ZmN3J1CZYJTosRWg7qmm5beUC0d1fw6kaYFUk3WQ6jm74APw/640?wx_fmt=png&amp;wxfrom=5&amp;wx_lazy=1&amp;wx_co=1" alt="图片"></p>
+<h2 id="五、结论"><a href="#五、结论" class="headerlink" title="五、结论"></a>五、结论</h2><p>kube-proxy IPVS 模式依然会使用 iptables 来做封包 MASQUERADE，但是其使用 ipset match 的方式保持了 iptables 规则数量恒定（几条），随着 service 的数量增多，不会出现 iptables 规则过多以及线性匹配的性能瓶颈。这里使用 iptables 与否不是关键，iptalbes 与 IPVS 理论上都是内核 netfilter 模块的客户端，IPVS 这里只是借用 iptables 方便地设置 netfilter 转发。</p>
+
+                
+            </div>
+            <hr/>
+
+            
+
+    <div class="reprint" id="reprint-statement">
+        
+            <div class="reprint__author">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-user">
+                        Author:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    <a href="/legend-blog/about" rel="external nofollow noreferrer">张庆伟</a>
+                </span>
+            </div>
+            <div class="reprint__type">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-link">
+                        Link:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    <a href="https://realzhangqingwei.github.io/legend-blog/2022/04/19/kube-proxy-%E5%B7%A5%E4%BD%9C%E6%A8%A1%E5%BC%8F%E5%88%86%E6%9E%90/">https://realzhangqingwei.github.io/legend-blog/2022/04/19/kube-proxy-%E5%B7%A5%E4%BD%9C%E6%A8%A1%E5%BC%8F%E5%88%86%E6%9E%90/</a>
+                </span>
+            </div>
+            <div class="reprint__notice">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-copyright">
+                        Reprint policy:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    All articles in this blog are used except for special statements
+                    <a href="https://creativecommons.org/licenses/by/4.0/deed.zh" rel="external nofollow noreferrer" target="_blank">CC BY 4.0</a>
+                    reprint policy. If reproduced, please indicate source
+                    <a href="/legend-blog/about" target="_blank">张庆伟</a>
+                    !
+                </span>
+            </div>
+        
+    </div>
+
+    <script async defer>
+      document.addEventListener("copy", function (e) {
+        let toastHTML = '<span>Copied successfully, please follow the reprint policy of this article</span><button class="btn-flat toast-action" onclick="navToReprintStatement()" style="font-size: smaller">more</a>';
+        M.toast({html: toastHTML})
+      });
+
+      function navToReprintStatement() {
+        $("html, body").animate({scrollTop: $("#reprint-statement").offset().top - 80}, 800);
+      }
+    </script>
+
+
+
+            <div class="tag_share" style="display: block;">
+                <div class="post-meta__tag-list" style="display: inline-block;">
+                    
+                        <div class="article-tag">
+                            
+                                <a href="/legend-blog/tags/kubernetes/">
+                                    <span class="chip bg-color">kubernetes</span>
+                                </a>
+                            
+                                <a href="/legend-blog/tags/iptables/">
+                                    <span class="chip bg-color">iptables</span>
+                                </a>
+                            
+                                <a href="/legend-blog/tags/ipvs/">
+                                    <span class="chip bg-color">ipvs</span>
+                                </a>
+                            
+                                <a href="/legend-blog/tags/%E7%BD%91%E7%BB%9C/">
+                                    <span class="chip bg-color">网络</span>
+                                </a>
+                            
+                        </div>
+                    
+                </div>
+                <div class="post_share" style="zoom: 80%; width: fit-content; display: inline-block; float: right; margin: -0.15rem 0;">
+                    <link rel="stylesheet" type="text/css" href="/legend-blog/libs/share/css/share.min.css">
+<div id="article-share">
+
+    
+    <div class="social-share" data-sites="twitter,facebook,google,qq,qzone,wechat,weibo,douban,linkedin" data-wechat-qrcode-helper="<p>微信扫一扫即可分享！</p>"></div>
+    <script src="/legend-blog/libs/share/js/social-share.min.js"></script>
+    
+
+    
+
+</div>
+
+                </div>
+            </div>
+            
+                <style>
+    #reward {
+        margin: 40px 0;
+        text-align: center;
+    }
+
+    #reward .reward-link {
+        font-size: 1.4rem;
+        line-height: 38px;
+    }
+
+    #reward .btn-floating:hover {
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2), 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    #rewardModal {
+        width: 320px;
+        height: 350px;
+    }
+
+    #rewardModal .reward-title {
+        margin: 15px auto;
+        padding-bottom: 5px;
+    }
+
+    #rewardModal .modal-content {
+        padding: 10px;
+    }
+
+    #rewardModal .close {
+        position: absolute;
+        right: 15px;
+        top: 15px;
+        color: rgba(0, 0, 0, 0.5);
+        font-size: 1.3rem;
+        line-height: 20px;
+        cursor: pointer;
+    }
+
+    #rewardModal .close:hover {
+        color: #ef5350;
+        transform: scale(1.3);
+        -moz-transform:scale(1.3);
+        -webkit-transform:scale(1.3);
+        -o-transform:scale(1.3);
+    }
+
+    #rewardModal .reward-tabs {
+        margin: 0 auto;
+        width: 210px;
+    }
+
+    .reward-tabs .tabs {
+        height: 38px;
+        margin: 10px auto;
+        padding-left: 0;
+    }
+
+    .reward-content ul {
+        padding-left: 0 !important;
+    }
+
+    .reward-tabs .tabs .tab {
+        height: 38px;
+        line-height: 38px;
+    }
+
+    .reward-tabs .tab a {
+        color: #fff;
+        background-color: #ccc;
+    }
+
+    .reward-tabs .tab a:hover {
+        background-color: #ccc;
+        color: #fff;
+    }
+
+    .reward-tabs .wechat-tab .active {
+        color: #fff !important;
+        background-color: #22AB38 !important;
+    }
+
+    .reward-tabs .alipay-tab .active {
+        color: #fff !important;
+        background-color: #019FE8 !important;
+    }
+
+    .reward-tabs .reward-img {
+        width: 210px;
+        height: 210px;
+    }
+</style>
+
+<div id="reward">
+    <a href="#rewardModal" class="reward-link modal-trigger btn-floating btn-medium waves-effect waves-light red">赏</a>
+
+    <!-- Modal Structure -->
+    <div id="rewardModal" class="modal">
+        <div class="modal-content">
+            <a class="close modal-close"><i class="fas fa-times"></i></a>
+            <h4 class="reward-title">你的赏识是我前进的动力</h4>
+            <div class="reward-content">
+                <div class="reward-tabs">
+                    <ul class="tabs row">
+                        <li class="tab col s6 alipay-tab waves-effect waves-light"><a href="#alipay">支付宝</a></li>
+                        <li class="tab col s6 wechat-tab waves-effect waves-light"><a href="#wechat">微 信</a></li>
+                    </ul>
+                    <div id="alipay">
+                        <img src="/legend-blog/medias/reward/alipay.jpg" class="reward-img" alt="支付宝打赏二维码">
+                    </div>
+                    <div id="wechat">
+                        <img src="/legend-blog/medias/reward/wechat.png" class="reward-img" alt="微信打赏二维码">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        $('.tabs').tabs();
+    });
+</script>
+
+            
+        </div>
+    </div>
+
+    
+        <link rel="stylesheet" href="/legend-blog/libs/gitalk/gitalk.css">
+<link rel="stylesheet" href="/legend-blog/css/my-gitalk.css">
+
+<div class="card gitalk-card" data-aos="fade-up">
+    <div class="comment_headling" style="font-size: 20px; font-weight: 700; position: relative; padding-left: 20px; top: 15px; padding-bottom: 5px;">
+        <i class="fas fa-comments fa-fw" aria-hidden="true"></i>
+        <span>评论</span>
+    </div>
+    <div id="gitalk-container" class="card-content"></div>
+</div>
+
+<script src="/legend-blog/libs/gitalk/gitalk.min.js"></script>
+<script>
+    let gitalk = new Gitalk({
+        clientID: '6590db5ef74baeaed101',
+        clientSecret: '03f5ed801889c0f6460ad136875bae322adc3b2e',
+        repo: 'realzhangqingwei.github.io',
+        owner: 'realzhangqingwei',
+        admin: "realzhangqingwei",
+        id: '2022-04-19T11-19-52',
+        distractionFreeMode: false  // Facebook-like distraction free mode
+    });
+
+    gitalk.render('gitalk-container');
+</script>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+<article id="prenext-posts" class="prev-next articles">
+    <div class="row article-row">
+        
+        <div class="article col s12 m6" data-aos="fade-up" data-aos="fade-up">
+            <div class="article-badge left-badge text-color">
+                <i class="far fa-dot-circle"></i>&nbsp;Current
+            </div>
+            <div class="card">
+                <a href="/legend-blog/2022/04/19/kube-proxy-%E5%B7%A5%E4%BD%9C%E6%A8%A1%E5%BC%8F%E5%88%86%E6%9E%90/">
+                    <div class="card-image">
+                        
+                        
+                        <img src="/legend-blog/medias/featureimages/23.jpg" class="responsive-img" alt="kube-proxy 工作模式分析">
+                        
+                        <span class="card-title">kube-proxy 工作模式分析</span>
+                    </div>
+                </a>
+                <div class="card-content article-content">
+                    <div class="summary block-with-text">
+                        
+                            kube-proxy 工作模式分析
+                        
+                    </div>
+                    <div class="publish-info">
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2022-04-19
+                            </span>
+                        <span class="publish-author">
+                            
+                            <i class="fas fa-bookmark fa-fw icon-category"></i>
+                            
+                            <a href="/legend-blog/categories/programming/" class="post-category">
+                                    编程
+                                </a>
+                            
+                            
+                        </span>
+                    </div>
+                </div>
+
+                
+                <div class="card-action article-tags">
+                    
+                    <a href="/legend-blog/tags/kubernetes/">
+                        <span class="chip bg-color">kubernetes</span>
+                    </a>
+                    
+                    <a href="/legend-blog/tags/iptables/">
+                        <span class="chip bg-color">iptables</span>
+                    </a>
+                    
+                    <a href="/legend-blog/tags/ipvs/">
+                        <span class="chip bg-color">ipvs</span>
+                    </a>
+                    
+                    <a href="/legend-blog/tags/%E7%BD%91%E7%BB%9C/">
+                        <span class="chip bg-color">网络</span>
+                    </a>
+                    
+                </div>
+                
+            </div>
+        </div>
+        
+        
+        <div class="article col s12 m6" data-aos="fade-up">
+            <div class="article-badge right-badge text-color">
+                Next&nbsp;<i class="fas fa-chevron-right"></i>
+            </div>
+            <div class="card">
+                <a href="/legend-blog/2022/04/17/2022-04-17-Prometheus%E6%9F%A5%E8%AF%A2%E8%AE%A1%E7%AE%97Kubernetes%E9%9B%86%E7%BE%A4%E4%B8%ADPod%20%E7%9A%84CPU%E3%80%81%E5%86%85%E5%AD%98%E4%BD%BF%E7%94%A8%E7%8E%87%E3%80%81%E6%B5%81%E9%87%8F%E7%9B%91%E6%8E%A7%E6%8C%87%E6%A0%87/">
+                    <div class="card-image">
+                        
+                        
+                        <img src="/legend-blog/medias/featureimages/16.jpg" class="responsive-img" alt="Prometheus查询计算Kubernetes集群中Pod 的CPU、内存使用率、流量监控指标">
+                        
+                        <span class="card-title">Prometheus查询计算Kubernetes集群中Pod 的CPU、内存使用率、流量监控指标</span>
+                    </div>
+                </a>
+                <div class="card-content article-content">
+                    <div class="summary block-with-text">
+                        
+                            
+                        
+                    </div>
+                    <div class="publish-info">
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2022-04-17
+                            </span>
+                        <span class="publish-author">
+                            
+                            <i class="fas fa-user fa-fw"></i>
+                            张庆伟
+                            
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="card-action article-tags">
+                    
+                    <a href="/legend-blog/tags/kubernetes/">
+                        <span class="chip bg-color">kubernetes</span>
+                    </a>
+                    
+                    <a href="/legend-blog/tags/docker/">
+                        <span class="chip bg-color">docker</span>
+                    </a>
+                    
+                    <a href="/legend-blog/tags/%E5%AE%B9%E5%99%A8/">
+                        <span class="chip bg-color">容器</span>
+                    </a>
+                    
+                    <a href="/legend-blog/tags/%E7%9B%91%E6%8E%A7/">
+                        <span class="chip bg-color">监控</span>
+                    </a>
+                    
+                </div>
+                
+            </div>
+        </div>
+        
+    </div>
+</article>
+
+</div>
+
+
+
+<!-- 代码块功能依赖 -->
+<script type="text/javascript" src="/legend-blog/libs/codeBlock/codeBlockFuction.js"></script>
+
+<!-- 代码语言 -->
+
+<script type="text/javascript" src="/legend-blog/libs/codeBlock/codeLang.js"></script>
+
+
+<!-- 代码块复制 -->
+
+<script type="text/javascript" src="/legend-blog/libs/codeBlock/codeCopy.js"></script>
+
+
+<!-- 代码块收缩 -->
+
+<script type="text/javascript" src="/legend-blog/libs/codeBlock/codeShrink.js"></script>
+
+
+    </div>
+    <div id="toc-aside" class="expanded col l3 hide-on-med-and-down">
+        <div class="toc-widget card" style="background-color: white;">
+            <div class="toc-title"><i class="far fa-list-alt"></i>&nbsp;&nbsp;TOC</div>
+            <div id="toc-content"></div>
+        </div>
+    </div>
+</div>
+
+<!-- TOC 悬浮按钮. -->
+
+<div id="floating-toc-btn" class="hide-on-med-and-down">
+    <a class="btn-floating btn-large bg-color">
+        <i class="fas fa-list-ul"></i>
+    </a>
+</div>
+
+
+<script src="/legend-blog/libs/tocbot/tocbot.min.js"></script>
+<script>
+    $(function () {
+        tocbot.init({
+            tocSelector: '#toc-content',
+            contentSelector: '#articleContent',
+            headingsOffset: -($(window).height() * 0.4 - 45),
+            collapseDepth: Number('0'),
+            headingSelector: 'h2, h3, h4'
+        });
+
+        // Set scroll toc fixed.
+        let tocHeight = parseInt($(window).height() * 0.4 - 64);
+        let $tocWidget = $('.toc-widget');
+        $(window).scroll(function () {
+            let scroll = $(window).scrollTop();
+            /* add post toc fixed. */
+            if (scroll > tocHeight) {
+                $tocWidget.addClass('toc-fixed');
+            } else {
+                $tocWidget.removeClass('toc-fixed');
+            }
+        });
+
+        
+        /* 修复文章卡片 div 的宽度. */
+        let fixPostCardWidth = function (srcId, targetId) {
+            let srcDiv = $('#' + srcId);
+            if (srcDiv.length === 0) {
+                return;
+            }
+
+            let w = srcDiv.width();
+            if (w >= 450) {
+                w = w + 21;
+            } else if (w >= 350 && w < 450) {
+                w = w + 18;
+            } else if (w >= 300 && w < 350) {
+                w = w + 16;
+            } else {
+                w = w + 14;
+            }
+            $('#' + targetId).width(w);
+        };
+
+        // 切换TOC目录展开收缩的相关操作.
+        const expandedClass = 'expanded';
+        let $tocAside = $('#toc-aside');
+        let $mainContent = $('#main-content');
+        $('#floating-toc-btn .btn-floating').click(function () {
+            if ($tocAside.hasClass(expandedClass)) {
+                $tocAside.removeClass(expandedClass).hide();
+                $mainContent.removeClass('l9');
+            } else {
+                $tocAside.addClass(expandedClass).show();
+                $mainContent.addClass('l9');
+            }
+            fixPostCardWidth('artDetail', 'prenext-posts');
+        });
+        
+    });
+</script>
+
+    
+
+</main>
+
+
+
+
+    <footer class="page-footer bg-color">
+    
+        <link rel="stylesheet" href="/legend-blog/libs/aplayer/APlayer.min.css">
+<style>
+    .aplayer .aplayer-lrc p {
+        
+        display: none;
+        
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 16px !important;
+    }
+
+    .aplayer .aplayer-lrc p.aplayer-lrc-current {
+        
+        display: none;
+        
+        font-size: 15px;
+        color: #42b983;
+    }
+
+    
+    .aplayer.aplayer-fixed.aplayer-narrow .aplayer-body {
+        left: -66px !important;
+    }
+
+    .aplayer.aplayer-fixed.aplayer-narrow .aplayer-body:hover {
+        left: 0px !important;
+    }
+
+    
+</style>
+<div class="">
+    
+    <div class="row">
+        <meting-js class="col l8 offset-l2 m10 offset-m1 s12"
+                   server="netease"
+                   type="playlist"
+                   id="503838841"
+                   fixed='true'
+                   autoplay='false'
+                   theme='#42b983'
+                   loop='all'
+                   order='random'
+                   preload='auto'
+                   volume='0.7'
+                   list-folded='true'
+        >
+        </meting-js>
+    </div>
+</div>
+
+<script src="/legend-blog/libs/aplayer/APlayer.min.js"></script>
+<script src="/legend-blog/libs/aplayer/Meting.min.js"></script>
+
+    
+
+    <div class="container row center-align"
+         style="margin-bottom: 15px !important;">
+        <div class="col s12 m8 l8 copy-right">
+            Copyright&nbsp;&copy;
+            
+                <span id="year">2019-2022</span>
+            
+            <a href="/legend-blog/about" target="_blank">捕风的legend</a>
+            |&nbsp;Powered by&nbsp;<a href="https://hexo.io/" target="_blank">Hexo</a>
+            |&nbsp;Theme&nbsp;<a href="https://github.com/blinkfox/hexo-theme-matery" target="_blank">Matery</a>
+            <br>
+            
+                &nbsp;<i class="fas fa-chart-area"></i>&nbsp;Total Words:&nbsp;<span
+                        class="white-color">22.6k</span>
+            
+            
+            
+                
+            
+            
+                <span id="busuanzi_container_site_pv">
+                &nbsp;|&nbsp;<i class="far fa-eye"></i>&nbsp;Total visits:&nbsp;
+                    <span id="busuanzi_value_site_pv" class="white-color"></span>
+            </span>
+            
+            
+                <span id="busuanzi_container_site_uv">
+                &nbsp;|&nbsp;<i class="fas fa-users"></i>&nbsp;Total visitors:&nbsp;
+                    <span id="busuanzi_value_site_uv" class="white-color"></span>
+            </span>
+            
+            <br>
+
+            <!-- 运行天数提醒. -->
+            
+                <span id="sitetime"> Loading ...</span>
+                <script>
+                    var calcSiteTime = function () {
+                        var seconds = 1000;
+                        var minutes = seconds * 60;
+                        var hours = minutes * 60;
+                        var days = hours * 24;
+                        var years = days * 365;
+                        var today = new Date();
+                        var startYear = "2019";
+                        var startMonth = "6";
+                        var startDate = "28";
+                        var startHour = "0";
+                        var startMinute = "0";
+                        var startSecond = "0";
+                        var todayYear = today.getFullYear();
+                        var todayMonth = today.getMonth() + 1;
+                        var todayDate = today.getDate();
+                        var todayHour = today.getHours();
+                        var todayMinute = today.getMinutes();
+                        var todaySecond = today.getSeconds();
+                        var t1 = Date.UTC(startYear, startMonth, startDate, startHour, startMinute, startSecond);
+                        var t2 = Date.UTC(todayYear, todayMonth, todayDate, todayHour, todayMinute, todaySecond);
+                        var diff = t2 - t1;
+                        var diffYears = Math.floor(diff / years);
+                        var diffDays = Math.floor((diff / days) - diffYears * 365);
+
+                        // 区分是否有年份.
+                        var language = '张庆伟';
+                        if (startYear === String(todayYear)) {
+                            document.getElementById("year").innerHTML = todayYear;
+                            var daysTip = 'This site has been running for ' + diffDays + ' days';
+                            if (language === 'zh-CN') {
+                                daysTip = '本站已运行 ' + diffDays + ' 天';
+                            } else if (language === 'zh-HK') {
+                                daysTip = '本站已運行 ' + diffDays + ' 天';
+                            }
+                            document.getElementById("sitetime").innerHTML = daysTip;
+                        } else {
+                            document.getElementById("year").innerHTML = startYear + " - " + todayYear;
+                            var yearsAndDaysTip = 'This site has been running for ' + diffYears + ' years and '
+                                + diffDays + ' days';
+                            if (language === 'zh-CN') {
+                                yearsAndDaysTip = '本站已运行 ' + diffYears + ' 年 ' + diffDays + ' 天';
+                            } else if (language === 'zh-HK') {
+                                yearsAndDaysTip = '本站已運行 ' + diffYears + ' 年 ' + diffDays + ' 天';
+                            }
+                            document.getElementById("sitetime").innerHTML = yearsAndDaysTip;
+                        }
+                    }
+
+                    calcSiteTime();
+                </script>
+            
+            <br>
+            
+        </div>
+        <div class="col s12 m4 l4 social-link social-statis">
+    <a href="https://github.com/realzhangqingwei" class="tooltipped" target="_blank" data-tooltip="访问我的GitHub" data-position="top" data-delay="50">
+        <i class="fab fa-github"></i>
+    </a>
+
+
+
+    <a href="mailto:2862150107@qq.com" class="tooltipped" target="_blank" data-tooltip="邮件联系我" data-position="top" data-delay="50">
+        <i class="fas fa-envelope-open"></i>
+    </a>
+
+
+
+
+
+
+
+    <a href="tencent://AddContact/?fromId=50&fromSubId=1&subcmd=all&uin=2862150107" class="tooltipped" target="_blank" data-tooltip="QQ联系我: 2862150107" data-position="top" data-delay="50">
+        <i class="fab fa-qq"></i>
+    </a>
+
+
+
+
+
+
+
+    <a href="/legend-blog/atom.xml" class="tooltipped" target="_blank" data-tooltip="RSS 订阅" data-position="top" data-delay="50">
+        <i class="fas fa-rss"></i>
+    </a>
+
+</div>
+    </div>
+</footer>
+
+<div class="progress-bar"></div>
+
+
+    <!-- 搜索遮罩框 -->
+<div id="searchModal" class="modal">
+    <div class="modal-content">
+        <div class="search-header">
+            <span class="title"><i class="fas fa-search"></i>&nbsp;&nbsp;Search</span>
+            <input type="search" id="searchInput" name="s" placeholder="Please enter a search keyword"
+                   class="search-input">
+        </div>
+        <div id="searchResult"></div>
+    </div>
+</div>
+
+<script type="text/javascript">
+$(function () {
+    var searchFunc = function (path, search_id, content_id) {
+        'use strict';
+        $.ajax({
+            url: path,
+            dataType: "xml",
+            success: function (xmlResponse) {
+                // get the contents from search data
+                var datas = $("entry", xmlResponse).map(function () {
+                    return {
+                        title: $("title", this).text(),
+                        content: $("content", this).text(),
+                        url: $("url", this).text()
+                    };
+                }).get();
+                var $input = document.getElementById(search_id);
+                var $resultContent = document.getElementById(content_id);
+                $input.addEventListener('input', function () {
+                    var str = '<ul class=\"search-result-list\">';
+                    var keywords = this.value.trim().toLowerCase().split(/[\s\-]+/);
+                    $resultContent.innerHTML = "";
+                    if (this.value.trim().length <= 0) {
+                        return;
+                    }
+                    // perform local searching
+                    datas.forEach(function (data) {
+                        var isMatch = true;
+                        var data_title = data.title.trim().toLowerCase();
+                        var data_content = data.content.trim().replace(/<[^>]+>/g, "").toLowerCase();
+                        var data_url = data.url;
+                        data_url = data_url.indexOf('/') === 0 ? data.url : '/' + data_url;
+                        var index_title = -1;
+                        var index_content = -1;
+                        var first_occur = -1;
+                        // only match artiles with not empty titles and contents
+                        if (data_title !== '' && data_content !== '') {
+                            keywords.forEach(function (keyword, i) {
+                                index_title = data_title.indexOf(keyword);
+                                index_content = data_content.indexOf(keyword);
+                                if (index_title < 0 && index_content < 0) {
+                                    isMatch = false;
+                                } else {
+                                    if (index_content < 0) {
+                                        index_content = 0;
+                                    }
+                                    if (i === 0) {
+                                        first_occur = index_content;
+                                    }
+                                }
+                            });
+                        }
+                        // show search results
+                        if (isMatch) {
+                            str += "<li><a href='" + data_url + "' class='search-result-title'>" + data_title + "</a>";
+                            var content = data.content.trim().replace(/<[^>]+>/g, "");
+                            if (first_occur >= 0) {
+                                // cut out 100 characters
+                                var start = first_occur - 20;
+                                var end = first_occur + 80;
+                                if (start < 0) {
+                                    start = 0;
+                                }
+                                if (start === 0) {
+                                    end = 100;
+                                }
+                                if (end > content.length) {
+                                    end = content.length;
+                                }
+                                var match_content = content.substr(start, end);
+                                // highlight all keywords
+                                keywords.forEach(function (keyword) {
+                                    var regS = new RegExp(keyword, "gi");
+                                    match_content = match_content.replace(regS, "<em class=\"search-keyword\">" + keyword + "</em>");
+                                });
+
+                                str += "<p class=\"search-result\">" + match_content + "...</p>"
+                            }
+                            str += "</li>";
+                        }
+                    });
+                    str += "</ul>";
+                    $resultContent.innerHTML = str;
+                });
+            }
+        });
+    };
+
+    searchFunc('/legend-blog/search.xml', 'searchInput', 'searchResult');
+});
+</script>
+
+    <!-- 回到顶部按钮 -->
+<div id="backTop" class="top-scroll">
+    <a class="btn-floating btn-large waves-effect waves-light" href="#!">
+        <i class="fas fa-arrow-up"></i>
+    </a>
+</div>
+
+
+    <script src="/legend-blog/libs/materialize/materialize.min.js"></script>
+    <script src="/legend-blog/libs/masonry/masonry.pkgd.min.js"></script>
+    <script src="/legend-blog/libs/aos/aos.js"></script>
+    <script src="/legend-blog/libs/scrollprogress/scrollProgress.min.js"></script>
+    <script src="/legend-blog/libs/lightGallery/js/lightgallery-all.min.js"></script>
+    <script src="/legend-blog/js/matery.js"></script>
+
+    
+
+    
+        
+        <script type="text/javascript">
+            // 只在桌面版网页启用特效
+            var windowWidth = $(window).width();
+            if (windowWidth > 768) {
+                document.write('<script type="text/javascript" src="/legend-blog/libs/others/sakura.js"><\/script>');
+            }
+        </script>
+    
+
+    <!-- 雪花特效 -->
+    
+
+    <!-- 鼠标星星特效 -->
+    
+
+     
+        <script src="https://ssl.captcha.qq.com/TCaptcha.js"></script>
+        <script src="/legend-blog/libs/others/TencentCaptcha.js"></script>
+        <button id="TencentCaptcha" data-appid="xxxxxxxxxx" data-cbfn="callback" type="button" hidden></button>
+    
+
+    <!-- Baidu Analytics -->
+
+    <!-- Baidu Push -->
+
+<script>
+    (function () {
+        var bp = document.createElement('script');
+        var curProtocol = window.location.protocol.split(':')[0];
+        if (curProtocol === 'https') {
+            bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';
+        } else {
+            bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+        }
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(bp, s);
+    })();
+</script>
+
+    
+    <script src="/legend-blog/libs/others/clicklove.js" async="async"></script>
+    
+    
+    <script async src="/legend-blog/libs/others/busuanzi.pure.mini.js"></script>
+    
+
+    
+
+    
+
+    <!--腾讯兔小巢-->
+    
+    
+
+    
+
+    
+
+    
+    <script src="/legend-blog/libs/instantpage/instantpage.js" type="module"></script>
+    
+
+</body>
+
+</html>
